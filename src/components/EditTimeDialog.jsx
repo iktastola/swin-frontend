@@ -15,6 +15,7 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
     style: '',
     minutes: '',
     seconds: '',
+    milliseconds '',
     date: '',
     competition: ''
   });
@@ -23,9 +24,10 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
     if (time) {
       // Parse time_seconds to minutes and seconds
       const totalSeconds = time.time_seconds;
-      const mins = Math.floor(totalSeconds / 60);
-      const secs = (totalSeconds % 60).toFixed(2);
-      
+      const mins = Math.floor(totalSeconds / 60);                          // 1
+      const secs = Math.floor(totalSeconds % 60);                          // 10
+      const millis = Math.round((totalSeconds - Math.floor(totalSeconds)) * 1000);  // 111 
+
       // Parse date
       const date = new Date(time.date);
       const dateStr = date.toISOString().split('T')[0];
@@ -36,6 +38,7 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
         style: time.style,
         minutes: mins.toString(),
         seconds: secs,
+	milliseconds: millis,
         date: dateStr,
         competition: time.competition || ''
       });
@@ -45,8 +48,11 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    const totalSeconds = (parseInt(formData.minutes) || 0) * 60 + parseFloat(formData.seconds || 0);
-    
+    const totalSeconds =
+    (parseInt(formData.minutes) || 0) * 60 +
+    (parseFloat(formData.seconds) || 0) +
+    ((parseInt(formData.milliseconds) || 0) / 1000);
+ 
     const timeData = {
       swimmer_id: formData.swimmer_id,
       distance: parseInt(formData.distance),
@@ -140,6 +146,17 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
                   max="59.99"
                   required
                   data-testid="edit-seconds-input"
+                />
+              </div>
+	      <div>
+                <Input
+                  type="number"
+                  placeholder="Milésimas"
+                  value={formData.milliseconds}
+                  onChange={(e) => setFormData({...formData, milliseconds: e.target.value})}
+                  min="0"
+                  max="999"
+                  data-testid="milliseconds-input"
                 />
               </div>
             </div>
