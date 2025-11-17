@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
-const STYLES = ['Libre', 'Espalda', 'Braza', 'Mariposa'];
+const STYLES = ['Libre', 'Espalda', 'Braza', 'Mariposa', 'Estilos'];
 
 export default function AddTimeDialog({ open, onOpenChange, onSubmit, swimmers }) {
   const [formData, setFormData] = useState({
@@ -15,6 +15,7 @@ export default function AddTimeDialog({ open, onOpenChange, onSubmit, swimmers }
     style: '',
     minutes: '',
     seconds: '',
+    miliseconds: '',
     date: new Date().toISOString().split('T')[0],
     competition: ''
   });
@@ -22,8 +23,11 @@ export default function AddTimeDialog({ open, onOpenChange, onSubmit, swimmers }
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    const totalSeconds = (parseInt(formData.minutes) || 0) * 60 + parseFloat(formData.seconds || 0);
-    
+   const totalSeconds =
+  (parseInt(formData.minutes) || 0) * 60 +
+  (parseFloat(formData.seconds) || 0) +
+  ((parseInt(formData.milliseconds) || 0) / 1000);
+ 
     const timeData = {
       swimmer_id: formData.swimmer_id,
       distance: parseInt(formData.distance),
@@ -40,6 +44,7 @@ export default function AddTimeDialog({ open, onOpenChange, onSubmit, swimmers }
       style: '',
       minutes: '',
       seconds: '',
+      milliseconds: '',    
       date: new Date().toISOString().split('T')[0],
       competition: ''
     });
@@ -126,6 +131,17 @@ export default function AddTimeDialog({ open, onOpenChange, onSubmit, swimmers }
                   max="59.99"
                   required
                   data-testid="seconds-input"
+                />
+              </div>
+	      <div>
+                <Input
+                  type="number"
+                  placeholder="Milésimas"
+                  value={formData.milliseconds}
+                  onChange={(e) => setFormData({...formData, milliseconds: e.target.value})}
+                  min="0"
+                  max="999"
+                  data-testid="milliseconds-input"
                 />
               </div>
             </div>
