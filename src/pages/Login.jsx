@@ -53,7 +53,7 @@ export default function Login({ onLogin }) {
           <CardTitle className="text-3xl font-bold text-gray-900">
             Club de Natación
           </CardTitle>
-          <p className="text-gray-600">Astolai I.K.T. Abadiño</p>
+          <p className="text-gray-600">Astola I.K.T. Abadiño</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
