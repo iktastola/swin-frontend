@@ -15,7 +15,7 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
     style: '',
     minutes: '',
     seconds: '',
-    milliseconds '',
+    milliseconds: '',
     date: '',
     competition: ''
   });
