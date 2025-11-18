@@ -11,7 +11,7 @@ import { Save, Shirt } from "lucide-react";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const SIZES = ['9/10','10','11/12','12','14','16','XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 export default function LockersManagement({ swimmers }) {
   const [selectedSwimmer, setSelectedSwimmer] = useState('');
