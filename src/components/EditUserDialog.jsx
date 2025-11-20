@@ -9,7 +9,8 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'swimmer'
+    role: 'swimmer',
+    birth_date: ''
   });
 
   useEffect(() => {
@@ -17,13 +18,18 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
       setFormData({
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        birth_date: user.birth_date ? new Date(user.birth_date).toISOString().slice(0, 16) : ''
       });
     }
   }, [user]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Asegurarse de que se asigna la fecha actual si no se ha cambiado birth_date
+    if (!formData.birth_date) {
+      formData.birth_date = new Date().toISOString().slice(0, 16);
+    }
     onSubmit(formData);
   };
 
@@ -60,6 +66,17 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="birth_date">Fecha de nacimiento</Label>
+            <Input
+              id="birth_date"
+              type="datetime-local"
+              value={formData.birth_date}
+              onChange={(e) => setFormData({...formData, birth_date: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="role">Rol</Label>
             <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
               <SelectTrigger data-testid="edit-role-select">
@@ -86,3 +103,4 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
     </Dialog>
   );
 }
+

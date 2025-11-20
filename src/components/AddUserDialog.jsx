@@ -10,17 +10,23 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
     name: '',
     email: '',
     password: '',
-    role: 'swimmer'
+    role: 'swimmer',
+    birth_date: ''
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Asegurarse de que se asigna la fecha actual si no se ha cambiado birth_date
+    if (!formData.birth_date) {
+      formData.birth_date = new Date().toISOString().slice(0, 16);
+    }
     onSubmit(formData);
     setFormData({
       name: '',
       email: '',
       password: '',
-      role: 'swimmer'
+      role: 'swimmer',
+      birth_date: ''
     });
   };
 
@@ -83,6 +89,17 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="birth_date">Fecha de nacimiento</Label>
+            <Input
+              id="birth_date"
+              type="datetime-local"
+              value={formData.birth_date}
+              onChange={(e) => setFormData({...formData, birth_date: e.target.value})}
+              required
+            />
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
@@ -96,3 +113,4 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
     </Dialog>
   );
 }
+
