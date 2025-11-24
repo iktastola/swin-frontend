@@ -31,6 +31,7 @@ export default function UsersTable({ users, onDelete, onEdit }) {
             <TableHead className="font-semibold">Nombre</TableHead>
             <TableHead className="font-semibold">Email</TableHead>
             <TableHead className="font-semibold">Rol</TableHead>
+            <TableHead className="font-semibold">Genero</TableHead>
             <TableHead className="font-semibold">Fecha de nacimiento</TableHead>
             <TableHead className="font-semibold">Fecha de registro</TableHead>
             <TableHead className="font-semibold text-right">Acciones</TableHead>
@@ -45,6 +46,9 @@ export default function UsersTable({ users, onDelete, onEdit }) {
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRoleBadgeColor(user.role)}`}>
                   {getRoleLabel(user.role)}
                 </span>
+              </TableCell>
+              <TableCell>
+                {user.gender === "fem" ? "Femenino" : "Masculino"}
               </TableCell>
               <TableCell>
                 {user.birth_date ? format(new Date(user.birth_date), 'dd MMM yyyy', { locale: es }) : 'No disponible'}

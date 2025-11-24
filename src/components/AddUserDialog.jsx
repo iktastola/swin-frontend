@@ -11,7 +11,8 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
     email: '',
     password: '',
     role: 'swimmer',
-    birth_date: ''
+    birth_date: '',
+    gender: 'fem'
   });
 
   const handleSubmit = (e) => {
@@ -20,13 +21,18 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
     if (!formData.birth_date) {
       formData.birth_date = new Date().toISOString().slice(0, 16);
     }
+    
+    if (!formData.gender) {
+      formData.gender = "fem";
+    }
     onSubmit(formData);
     setFormData({
       name: '',
       email: '',
       password: '',
       role: 'swimmer',
-      birth_date: ''
+      birth_date: '',
+      gender: 'fem':
     });
   };
 
@@ -85,6 +91,19 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
                 <SelectItem value="swimmer">Nadador</SelectItem>
                 <SelectItem value="coach">Entrenador</SelectItem>
                 <SelectItem value="admin">Administrador</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+         <div className="space-y-2">
+            <Label htmlFor="gender">Género</Label>
+	      <Select value={formData.gender} onValueChange={(value) => setFormData({...formData, gender: value})}>
+              <SelectTrigger data-testid="gender-select">
+                <SelectValue placeholder="Seleccionar genero" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fem">Fememenino</SelectItem>
+                <SelectItem value="mas">Masculino</SelectItem>
               </SelectContent>
             </Select>
           </div>

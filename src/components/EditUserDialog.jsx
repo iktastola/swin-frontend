@@ -10,7 +10,8 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
     name: '',
     email: '',
     role: 'swimmer',
-    birth_date: ''
+    birth_date: '',
+    gender:'fem'
   });
 
   useEffect(() => {
@@ -19,7 +20,8 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
         name: user.name,
         email: user.email,
         role: user.role,
-        birth_date: user.birth_date ? new Date(user.birth_date).toISOString().slice(0, 16) : ''
+        birth_date: user.birth_date ? new Date(user.birth_date).toISOString().slice(0, 16) : '',
+        gender: user.gender ? user.gender : 'fem'
       });
     }
   }, [user]);
@@ -29,6 +31,9 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
     // Asegurarse de que se asigna la fecha actual si no se ha cambiado birth_date
     if (!formData.birth_date) {
       formData.birth_date = new Date().toISOString().slice(0, 16);
+    }
+    if (!formData.gender) {
+      formData.gender = 'fem';
     }
     onSubmit(formData);
   };
@@ -75,6 +80,20 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
               required
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="gender">Género</Label>
+              <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
+              <SelectTrigger data-testid="edit-gender-select">
+                <SelectValue placeholder="Seleccionar genero" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fem">Femenino</SelectItem>
+                <SelectItem value="mas">Masculino</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="role">Rol</Label>
