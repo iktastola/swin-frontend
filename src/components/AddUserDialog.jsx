@@ -32,7 +32,7 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
       password: '',
       role: 'swimmer',
       birth_date: '',
-      gender: 'fem':
+      gender: 'fem'
     });
   };
 
