@@ -6,83 +6,86 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
-const STYLES = ['Libre', 'Espalda', 'Braza', 'Mariposa'];
+const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
 
 export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swimmers }) {
   const [formData, setFormData] = useState({
-    swimmer_id: '',
-    distance: '',
-    style: '',
-    minutes: '',
-    seconds: '',
-    milliseconds: '',
-    date: '',
-    competition: ''
+    swimmer_id: "",
+    distance: "",
+    style: "",
+    minutes: "",
+    seconds: "",
+    milliseconds: "",
+    date: "",
+    competition: "",
+    oficial: true,
   });
 
   useEffect(() => {
     if (time) {
-      // Parse time_seconds to minutes and seconds
       const totalSeconds = time.time_seconds;
-      const mins = Math.floor(totalSeconds / 60);                          // 1
-      const secs = Math.floor(totalSeconds % 60);                          // 10
-      const millis = Math.round((totalSeconds - Math.floor(totalSeconds)) * 1000);  // 111 
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = Math.floor(totalSeconds % 60);
+      const millis = Math.round((totalSeconds - Math.floor(totalSeconds)) * 1000);
 
-      // Parse date
-      const date = new Date(time.date);
-      const dateStr = date.toISOString().split('T')[0];
+      const date = new Date(time.date).toISOString().split("T")[0];
 
       setFormData({
         swimmer_id: time.swimmer_id,
         distance: time.distance.toString(),
         style: time.style,
         minutes: mins.toString(),
-        seconds: secs,
-	milliseconds: millis,
-        date: dateStr,
-        competition: time.competition || ''
+        seconds: secs.toString(),
+        milliseconds: millis.toString(),
+        date,
+        competition: time.competition || "",
+        oficial: time.oficial ?? true,
       });
     }
   }, [time]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     const totalSeconds =
-    (parseInt(formData.minutes) || 0) * 60 +
-    (parseFloat(formData.seconds) || 0) +
-    ((parseInt(formData.milliseconds) || 0) / 1000);
- 
+      (parseInt(formData.minutes) || 0) * 60 +
+      (parseFloat(formData.seconds) || 0) +
+      ((parseInt(formData.milliseconds) || 0) / 1000);
+
     const timeData = {
       swimmer_id: formData.swimmer_id,
       distance: parseInt(formData.distance),
       style: formData.style,
       time_seconds: totalSeconds,
       date: new Date(formData.date).toISOString(),
-      competition: formData.competition || null
+      competition: formData.competition || null,
+      oficial: formData.oficial,
     };
-    
+
     onSubmit(timeData);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" data-testid="edit-time-dialog">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl text-[#278D33]">Editar Tiempo</DialogTitle>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4">
+
           <div className="space-y-2">
-            <Label htmlFor="swimmer">Nadador</Label>
-            <Select value={formData.swimmer_id} onValueChange={(value) => setFormData({...formData, swimmer_id: value})}>
-              <SelectTrigger data-testid="edit-swimmer-select">
+            <Label>Nadador</Label>
+            <Select
+              value={formData.swimmer_id}
+              onValueChange={(v) => setFormData({ ...formData, swimmer_id: v })}
+            >
+              <SelectTrigger>
                 <SelectValue placeholder="Seleccionar nadador" />
               </SelectTrigger>
               <SelectContent>
-                {swimmers.map((swimmer) => (
-                  <SelectItem key={swimmer.id} value={swimmer.id}>
-                    {swimmer.name}
-                  </SelectItem>
+                {swimmers.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -90,15 +93,18 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="distance">Distancia</Label>
-              <Select value={formData.distance} onValueChange={(value) => setFormData({...formData, distance: value})}>
-                <SelectTrigger data-testid="edit-distance-select">
+              <Label>Distancia</Label>
+              <Select
+                value={formData.distance}
+                onValueChange={(v) => setFormData({ ...formData, distance: v })}
+              >
+                <SelectTrigger>
                   <SelectValue placeholder="Metros" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DISTANCES.map((dist) => (
-                    <SelectItem key={dist} value={dist.toString()}>
-                      {dist}m
+                  {DISTANCES.map((d) => (
+                    <SelectItem key={d} value={d.toString()}>
+                      {d}m
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -106,16 +112,17 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="style">Estilo</Label>
-              <Select value={formData.style} onValueChange={(value) => setFormData({...formData, style: value})}>
-                <SelectTrigger data-testid="edit-style-select">
+              <Label>Estilo</Label>
+              <Select
+                value={formData.style}
+                onValueChange={(v) => setFormData({ ...formData, style: v })}
+              >
+                <SelectTrigger>
                   <SelectValue placeholder="Estilo" />
                 </SelectTrigger>
                 <SelectContent>
-                  {STYLES.map((style) => (
-                    <SelectItem key={style} value={style}>
-                      {style}
-                    </SelectItem>
+                  {STYLES.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -124,75 +131,72 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
 
           <div className="space-y-2">
             <Label>Tiempo</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Input
-                  type="number"
-                  placeholder="Minutos"
-                  value={formData.minutes}
-                  onChange={(e) => setFormData({...formData, minutes: e.target.value})}
-                  min="0"
-                  data-testid="edit-minutes-input"
-                />
-              </div>
-              <div>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="Segundos"
-                  value={formData.seconds}
-                  onChange={(e) => setFormData({...formData, seconds: e.target.value})}
-                  min="0"
-                  max="59.99"
-                  required
-                  data-testid="edit-seconds-input"
-                />
-              </div>
-	      <div>
-                <Input
-                  type="number"
-                  placeholder="Milésimas"
-                  value={formData.milliseconds}
-                  onChange={(e) => setFormData({...formData, milliseconds: e.target.value})}
-                  min="0"
-                  max="999"
-                  data-testid="milliseconds-input"
-                />
-              </div>
+            <div className="grid grid-cols-3 gap-4">
+              <Input
+                type="number"
+                placeholder="Min"
+                value={formData.minutes}
+                onChange={(e) => setFormData({ ...formData, minutes: e.target.value })}
+              />
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="Seg"
+                value={formData.seconds}
+                onChange={(e) => setFormData({ ...formData, seconds: e.target.value })}
+              />
+              <Input
+                type="number"
+                placeholder="Ms"
+                value={formData.milliseconds}
+                onChange={(e) => setFormData({ ...formData, milliseconds: e.target.value })}
+              />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="date">Fecha</Label>
+            <Label>Fecha</Label>
             <Input
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData({...formData, date: e.target.value})}
-              required
-              data-testid="edit-date-input"
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="competition">Competición (opcional)</Label>
+            <Label>Competición (opcional)</Label>
             <Input
-              placeholder="Nombre de la competición"
               value={formData.competition}
-              onChange={(e) => setFormData({...formData, competition: e.target.value})}
-              data-testid="edit-competition-input"
+              onChange={(e) => setFormData({ ...formData, competition: e.target.value })}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Oficial</Label>
+            <Select
+              value={formData.oficial ? "true" : "false"}
+              onValueChange={(v) => setFormData({ ...formData, oficial: v === "true" })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">SI</SelectItem>
+                <SelectItem value="false">NO</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-[#278D33] hover:bg-[#1f6b28]" data-testid="submit-edit-time-button">
+            <Button type="submit" className="bg-[#278D33] hover:bg-[#1f6b28]">
               Guardar Cambios
             </Button>
           </DialogFooter>
+
         </form>
       </DialogContent>
     </Dialog>
   );
 }
+
