@@ -83,7 +83,7 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
 
           <div className="space-y-2">
             <Label htmlFor="gender">Género</Label>
-              <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
+              <Select value={formData.gender} onValueChange={(value) => setFormData({...formData, gender: value})}>
               <SelectTrigger data-testid="edit-gender-select">
                 <SelectValue placeholder="Seleccionar genero" />
               </SelectTrigger>
