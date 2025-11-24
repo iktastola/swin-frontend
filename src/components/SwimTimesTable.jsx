@@ -156,11 +156,14 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
                 : null);
 
             return (
-              <TableRow
-                key={time.id}
-                className="hover:bg-gray-50"
-                data-testid={`time-row-${time.id}`}
-              >
+		 <TableRow
+                   key={time.id}
+                   className={`hover:bg-gray-50 ${
+                     time.minima === "si" ? "bg-red-100" : ""
+                   }`}
+                   data-testid={`time-row-${time.id}`}
+                 >
+
                 {swimmers.length > 0 && (
                   <TableCell className="font-medium">
                     {getSwimmerName(time.swimmer_id)}
