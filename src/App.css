@@ -1,3 +1,4 @@
+/* Fuente y estilos básicos */
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
 * {
@@ -10,17 +11,167 @@ body {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
+/* Estilos para los encabezados */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Space Grotesk', sans-serif;
 }
 
+/* Contenedor principal */
 .App {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 10px; /* Ajuste para pantallas pequeñas */
 }
 
-/* Custom scrollbar */
+/* Barra de navegación */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.navbar-toggler {
+  display: none; /* Se muestra solo en pantallas pequeñas */
+  background-color: #278D33;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.menu {
+  display: flex;
+  gap: 10px;
+}
+
+.menu.open {
+  display: block;
+}
+
+/* Estilo de las imágenes */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Transiciones */
+button, a {
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Flexbox para contenedores */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  /* Navbar y botones */
+  .navbar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .navbar-toggler {
+    display: block;
+  }
+
+  /* Menú desplegable */
+  .menu {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .menu.open {
+    display: block;
+  }
+
+  .card-hover {
+    padding: 10px;
+  }
+
+  /* Contenedores flexibles en pantallas pequeñas */
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Ajuste del tamaño de los botones */
+  button {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .App {
+    padding: 5px;
+  }
+
+  /* Ajuste de tamaño de texto */
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Ajustes para pantallas muy pequeñas (móviles) */
+  body {
+    font-size: 12px;
+  }
+
+  .navbar {
+    flex-direction: column;
+  }
+
+  .navbar-toggler {
+    background-color: #278D33;
+    padding: 12px;
+  }
+
+  .card-hover {
+    padding: 8px;
+  }
+
+  /* Mejora el tamaño de los botones */
+  button {
+    font-size: 12px;
+    padding: 8px;
+  }
+}
+
+/* Scroll personalizado */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -39,56 +190,3 @@ h1, h2, h3, h4, h5, h6 {
   background: #1f6b28;
 }
 
-/* Smooth transitions */
-button, a {
-  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
-}
-
-button:hover {
-  transform: translateY(-1px);
-}
-
-button:active {
-  transform: translateY(0);
-}
-
-/* Custom animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.slide-in {
-  animation: slideIn 0.4s ease-out;
-}
-
-/* Card hover effects */
-.card-hover {
-  transition: box-shadow 0.3s, transform 0.3s;
-}
-
-.card-hover:hover {
-  box-shadow: 0 10px 25px rgba(39, 141, 51, 0.15);
-  transform: translateY(-2px);
-}
