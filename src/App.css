@@ -94,6 +94,49 @@ button:active {
 }
 
 @media (max-width: 768px) {
+  /* Ajuste en el contenedor de los botones */
+  .tiempo-buttons {
+    display: flex;
+    flex-direction: column; /* Cambiar la dirección de los botones en pantallas pequeñas */
+    align-items: flex-start; /* Alinearlos al inicio */
+    gap: 10px;
+  }
+
+  /* Estilo de los botones para mejor visualización */
+  .tiempo-buttons button {
+    width: 100%; /* Los botones ocupan todo el ancho disponible */
+    padding: 12px;
+    font-size: 14px; /* Asegurarse de que el texto se ajuste correctamente */
+  }
+
+  /* Mejorar la visibilidad del botón "Registrar Tiempo" */
+  .registrar-button {
+    width: 100%; /* Asegurarse de que se expanda */
+    font-size: 16px;
+    padding: 12px;
+    background-color: #278D33; /* Color verde consistente */
+    color: white;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 10px;
+    transition: background-color 0.2s ease;
+  }
+
+  .registrar-button:hover {
+    background-color: #1f6b28; /* Color cuando el botón esté en hover */
+  }
+
+  /* Ajuste en el tamaño de la tabla */
+  .gestion-tiempos-table {
+    font-size: 14px; /* Reducir tamaño de texto para pantallas pequeñas */
+    width: 100%;
+  }
+
+  /* Ajustar el título y el espacio alrededor */
+  .gestion-tiempos {
+    margin-top: 20px;
+    margin-bottom: 15px;
+  }
   body {
     font-size: 14px;
   }
