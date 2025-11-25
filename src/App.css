@@ -189,7 +189,7 @@ button:active {
 }
 
 @media (max-width: 480px) {
-	  /* Ajustes para pantallas aún más pequeñas */
+  /* Ajustes para pantallas aún más pequeñas */
   .tiempo-buttons {
     gap: 8px;
   }
@@ -203,29 +203,29 @@ button:active {
     font-size: 14px;
   }
 }
-  /* Ajustes para pantallas muy pequeñas (móviles) */
-  body {
-    font-size: 12px;
-  }
 
-  .navbar {
-    flex-direction: column;
-  }
+/* Ajustes para pantallas muy pequeñas (móviles) */
+body {
+  font-size: 12px;
+}
 
-  .navbar-toggler {
-    background-color: #278D33;
-    padding: 12px;
-  }
+.navbar {
+  flex-direction: column;
+}
 
-  .card-hover {
-    padding: 8px;
-  }
+.navbar-toggler {
+  background-color: #278D33;
+  padding: 12px;
+}
 
-  /* Mejora el tamaño de los botones */
-  button {
-    font-size: 12px;
-    padding: 8px;
-  }
+.card-hover {
+  padding: 8px;
+}
+
+/* Mejora el tamaño de los botones */
+button {
+  font-size: 12px;
+  padding: 8px;
 }
 
 /* Scroll personalizado */
