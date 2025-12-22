@@ -16,6 +16,8 @@ import SwimmerSelector from "@/components/SwimmerSelector";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import AuditTool from "@/components/AuditTool";
+
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
 const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
@@ -265,7 +267,9 @@ export default function AdminDashboard({ user, onLogout }) {
           <TabsContent value="times" className="fade-in">
             <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
               <CardHeader>
+                <AuditTool />
                 <div className="flex flex-col gap-6">
+
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <CardTitle className="text-2xl text-gray-900">Gestión de Tiempos</CardTitle>
                     <Button

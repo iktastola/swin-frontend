@@ -12,6 +12,8 @@ import SwimmerSelector from "@/components/SwimmerSelector";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import AuditTool from "@/components/AuditTool";
+
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
 const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
@@ -23,7 +25,7 @@ export default function CoachDashboard({ user, onLogout }) {
   const [allTimes, setAllTimes] = useState([]);
   const [times, setTimes] = useState([]);
   const [swimmers, setSwimmers] = useState([]);
-  
+
   // Filter States
   const [selectedSwimmer, setSelectedSwimmer] = useState(null);
   const [filterDistance, setFilterDistance] = useState("all");
@@ -66,7 +68,7 @@ export default function CoachDashboard({ user, onLogout }) {
         });
       }
     }
-    
+
     setTimes(result);
   }, [allTimes, selectedSwimmer, filterDistance, filterStyle, filterDate, filterLogic]);
 
@@ -173,7 +175,9 @@ export default function CoachDashboard({ user, onLogout }) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
           <CardHeader>
+            <AuditTool />
             <div className="flex flex-col gap-6">
+
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <CardTitle className="text-2xl text-gray-900">Tiempos de Natación</CardTitle>
                 <Button
@@ -256,8 +260,8 @@ export default function CoachDashboard({ user, onLogout }) {
             {loading ? (
               <div className="text-center py-8">Cargando...</div>
             ) : (
-              <SwimTimesTable 
-                times={times} 
+              <SwimTimesTable
+                times={times}
                 swimmers={swimmers}
                 onDelete={handleDeleteTime}
                 onEdit={handleEditTime}
