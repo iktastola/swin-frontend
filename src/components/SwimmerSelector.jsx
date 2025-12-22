@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 
 export default function SwimmerSelector({ swimmers, selectedSwimmer, onSelectSwimmer }) {
   return (
-    <div className="w-full sm:w-64">
+    <div className="w-full">
       <Select value={selectedSwimmer || "all"} onValueChange={(value) => onSelectSwimmer(value === "all" ? null : value)}>
         <SelectTrigger className="border-[#278D33]/30 focus:ring-[#278D33]" data-testid="swimmer-selector">
           <Users className="w-4 h-4 mr-2 text-[#278D33]" />
