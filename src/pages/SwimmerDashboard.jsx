@@ -8,19 +8,60 @@ import { toast } from "sonner";
 import SwimTimesTable from "@/components/SwimTimesTable";
 import PersonalBestsTable from "@/components/PersonalBestsTable";
 import LockerView from "@/components/LockerView";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+
+const DISTANCES = [50, 100, 200, 400, 800, 1500];
+const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 export default function SwimmerDashboard({ user, onLogout }) {
+  const [allTimes, setAllTimes] = useState([]);
   const [times, setTimes] = useState([]);
   const [personalBests, setPersonalBests] = useState([]);
   const [locker, setLocker] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Filter States
+  const [filterDistance, setFilterDistance] = useState("all");
+  const [filterStyle, setFilterStyle] = useState("all");
+  const [filterDate, setFilterDate] = useState("");
+  const [filterLogic, setFilterLogic] = useState("AND");
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Filter Effect
+  useEffect(() => {
+    let result = allTimes;
+    // Si no hay filtros activos, mostrar todo
+    const isFiltering = filterDistance !== "all" || filterStyle !== "all" || filterDate;
+
+    if (isFiltering) {
+      if (filterLogic === "AND") {
+        result = result.filter(t => {
+          const matchDistance = filterDistance === "all" || t.distance.toString() === filterDistance;
+          const matchStyle = filterStyle === "all" || t.style === filterStyle;
+          const matchDate = !filterDate || t.date.startsWith(filterDate);
+          return matchDistance && matchStyle && matchDate;
+        });
+      } else {
+        // OR Logic
+        result = result.filter(t => {
+          const matchDistance = filterDistance !== "all" && t.distance.toString() === filterDistance;
+          const matchStyle = filterStyle !== "all" && t.style === filterStyle;
+          const matchDate = filterDate && t.date.startsWith(filterDate);
+          return matchDistance || matchStyle || matchDate;
+        });
+      }
+    }
+
+    setTimes(result);
+  }, [allTimes, filterDistance, filterStyle, filterDate, filterLogic]);
 
   const fetchData = async () => {
     try {
@@ -33,6 +74,7 @@ export default function SwimmerDashboard({ user, onLogout }) {
         axios.get(`${API}/lockers/${user.id}`, { headers }).catch(() => ({ data: null }))
       ]);
 
+      setAllTimes(timesRes.data);
       setTimes(timesRes.data);
       setPersonalBests(pbRes.data);
       setLocker(lockerRes.data);
@@ -87,7 +129,65 @@ export default function SwimmerDashboard({ user, onLogout }) {
           <TabsContent value="times" className="fade-in">
             <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-2xl text-gray-900">Mis Tiempos de Natación</CardTitle>
+                <div className="flex flex-col gap-6">
+                  <CardTitle className="text-2xl text-gray-900">Mis Tiempos de Natación</CardTitle>
+
+                  {/* Filters Section */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-gray-50/50 p-4 rounded-lg border border-gray-100">
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500 font-semibold uppercase">Lógica de Filtro</Label>
+                      <Select value={filterLogic} onValueChange={setFilterLogic}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AND">Y (Cumplir todos)</SelectItem>
+                          <SelectItem value="OR">O (Cumplir alguno)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500 font-semibold uppercase">Distancia</Label>
+                      <Select value={filterDistance} onValueChange={setFilterDistance}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Todas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas</SelectItem>
+                          {DISTANCES.map(d => (
+                            <SelectItem key={d} value={d.toString()}>{d}m</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500 font-semibold uppercase">Estilo</Label>
+                      <Select value={filterStyle} onValueChange={setFilterStyle}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Todos" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          {STYLES.map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500 font-semibold uppercase">Fecha</Label>
+                      <Input
+                        type="date"
+                        value={filterDate}
+                        onChange={(e) => setFilterDate(e.target.value)}
+                        className="bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {loading ? (

@@ -13,14 +13,28 @@ import SwimTimesTable from "@/components/SwimTimesTable";
 import AddTimeDialog from "@/components/AddTimeDialog";
 import EditTimeDialog from "@/components/EditTimeDialog";
 import SwimmerSelector from "@/components/SwimmerSelector";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+
+const DISTANCES = [50, 100, 200, 400, 800, 1500];
+const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 export default function AdminDashboard({ user, onLogout }) {
   const [users, setUsers] = useState([]);
+  const [allTimes, setAllTimes] = useState([]);
   const [times, setTimes] = useState([]);
+
+  // Filter States
   const [selectedSwimmer, setSelectedSwimmer] = useState(null);
+  const [filterDistance, setFilterDistance] = useState("all");
+  const [filterStyle, setFilterStyle] = useState("all");
+  const [filterDate, setFilterDate] = useState("");
+  const [filterLogic, setFilterLogic] = useState("AND");
+
   const [showAddUserDialog, setShowAddUserDialog] = useState(false);
   const [showEditUserDialog, setShowEditUserDialog] = useState(false);
   const [showAddTimeDialog, setShowAddTimeDialog] = useState(false);
@@ -34,13 +48,35 @@ export default function AdminDashboard({ user, onLogout }) {
     fetchAllTimes();
   }, []);
 
+  // Filter Effect
   useEffect(() => {
-    if (selectedSwimmer) {
-      fetchTimesForSwimmer(selectedSwimmer);
-    } else {
-      fetchAllTimes();
+    let result = allTimes;
+    // Si no hay filtros activos, mostrar todo
+    const isFiltering = selectedSwimmer || filterDistance !== "all" || filterStyle !== "all" || filterDate;
+
+    if (isFiltering) {
+      if (filterLogic === "AND") {
+        result = result.filter(t => {
+          const matchSwimmer = !selectedSwimmer || t.swimmer_id === selectedSwimmer;
+          const matchDistance = filterDistance === "all" || t.distance.toString() === filterDistance;
+          const matchStyle = filterStyle === "all" || t.style === filterStyle;
+          const matchDate = !filterDate || t.date.startsWith(filterDate);
+          return matchSwimmer && matchDistance && matchStyle && matchDate;
+        });
+      } else {
+        // OR Logic
+        result = result.filter(t => {
+          const matchSwimmer = selectedSwimmer && t.swimmer_id === selectedSwimmer;
+          const matchDistance = filterDistance !== "all" && t.distance.toString() === filterDistance;
+          const matchStyle = filterStyle !== "all" && t.style === filterStyle;
+          const matchDate = filterDate && t.date.startsWith(filterDate);
+          return matchSwimmer || matchDistance || matchStyle || matchDate;
+        });
+      }
     }
-  }, [selectedSwimmer]);
+
+    setTimes(result);
+  }, [allTimes, selectedSwimmer, filterDistance, filterStyle, filterDate, filterLogic]);
 
   const fetchUsers = async () => {
     try {
@@ -60,22 +96,13 @@ export default function AdminDashboard({ user, onLogout }) {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       const response = await axios.get(`${API}/times`, { headers });
-      setTimes(response.data);
+      setAllTimes(response.data);
     } catch (error) {
       toast.error("Error al cargar tiempos");
     }
   };
 
-  const fetchTimesForSwimmer = async (swimmerId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      const response = await axios.get(`${API}/times?swimmer_id=${swimmerId}`, { headers });
-      setTimes(response.data);
-    } catch (error) {
-      toast.error("Error al cargar tiempos");
-    }
-  };
+
 
   const handleAddUser = async (userData) => {
     try {
@@ -128,11 +155,9 @@ export default function AdminDashboard({ user, onLogout }) {
       await axios.post(`${API}/times`, timeData, { headers });
       toast.success("Tiempo registrado correctamente");
       setShowAddTimeDialog(false);
-      if (selectedSwimmer) {
-        fetchTimesForSwimmer(selectedSwimmer);
-      } else {
-        fetchAllTimes();
-      }
+      toast.success("Tiempo registrado correctamente");
+      setShowAddTimeDialog(false);
+      fetchAllTimes();
     } catch (error) {
       toast.error(error.response?.data?.detail || "Error al registrar tiempo");
     }
@@ -151,11 +176,7 @@ export default function AdminDashboard({ user, onLogout }) {
       toast.success("Tiempo actualizado correctamente");
       setShowEditTimeDialog(false);
       setEditingTime(null);
-      if (selectedSwimmer) {
-        fetchTimesForSwimmer(selectedSwimmer);
-      } else {
-        fetchAllTimes();
-      }
+      fetchAllTimes();
     } catch (error) {
       toast.error(error.response?.data?.detail || "Error al actualizar tiempo");
     }
@@ -167,11 +188,7 @@ export default function AdminDashboard({ user, onLogout }) {
       const headers = { Authorization: `Bearer ${token}` };
       await axios.delete(`${API}/times/${timeId}`, { headers });
       toast.success("Tiempo eliminado");
-      if (selectedSwimmer) {
-        fetchTimesForSwimmer(selectedSwimmer);
-      } else {
-        fetchAllTimes();
-      }
+      fetchAllTimes();
     } catch (error) {
       toast.error("Error al eliminar tiempo");
     }
@@ -248,14 +265,9 @@ export default function AdminDashboard({ user, onLogout }) {
           <TabsContent value="times" className="fade-in">
             <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
               <CardHeader>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <CardTitle className="text-2xl text-gray-900">Gestión de Tiempos</CardTitle>
-                  <div className="flex gap-3 w-full sm:w-auto">
-                    <SwimmerSelector
-                      swimmers={swimmers}
-                      selectedSwimmer={selectedSwimmer}
-                      onSelectSwimmer={setSelectedSwimmer}
-                    />
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <CardTitle className="text-2xl text-gray-900">Gestión de Tiempos</CardTitle>
                     <Button
                       onClick={() => setShowAddTimeDialog(true)}
                       className="bg-[#278D33] hover:bg-[#1f6b28] text-white"
@@ -265,14 +277,79 @@ export default function AdminDashboard({ user, onLogout }) {
                       Registrar Tiempo
                     </Button>
                   </div>
+
+                  {/* Filters Section */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 bg-gray-50/50 p-4 rounded-lg border border-gray-100">
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500 font-semibold uppercase">Lógica de Filtro</Label>
+                      <Select value={filterLogic} onValueChange={setFilterLogic}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AND">Y (Cumplir todos)</SelectItem>
+                          <SelectItem value="OR">O (Cumplir alguno)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500 font-semibold uppercase">Nadador</Label>
+                      <SwimmerSelector
+                        swimmers={swimmers}
+                        selectedSwimmer={selectedSwimmer}
+                        onSelectSwimmer={setSelectedSwimmer}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500 font-semibold uppercase">Distancia</Label>
+                      <Select value={filterDistance} onValueChange={setFilterDistance}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Todas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas</SelectItem>
+                          {DISTANCES.map(d => (
+                            <SelectItem key={d} value={d.toString()}>{d}m</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500 font-semibold uppercase">Estilo</Label>
+                      <Select value={filterStyle} onValueChange={setFilterStyle}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Todos" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          {STYLES.map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500 font-semibold uppercase">Fecha</Label>
+                      <Input
+                        type="date"
+                        value={filterDate}
+                        onChange={(e) => setFilterDate(e.target.value)}
+                        className="bg-white"
+                      />
+                    </div>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
                 {loading ? (
                   <div className="text-center py-8">Cargando...</div>
                 ) : (
-                  <SwimTimesTable 
-                    times={times} 
+                  <SwimTimesTable
+                    times={times}
                     swimmers={swimmers}
                     onDelete={handleDeleteTime}
                     onEdit={handleEditTime}
