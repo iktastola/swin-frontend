@@ -16,6 +16,7 @@ import SwimmerSelector from "@/components/SwimmerSelector";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import EditProfileDialog from "@/components/EditProfileDialog";
 import AuditTool from "@/components/AuditTool";
 
 
@@ -36,6 +37,8 @@ export default function AdminDashboard({ user, onLogout }) {
   const [filterStyle, setFilterStyle] = useState("all");
   const [filterDate, setFilterDate] = useState("");
   const [filterLogic, setFilterLogic] = useState("AND");
+
+  const [showEditProfileDialog, setShowEditProfileDialog] = useState(false);
 
   const [showAddUserDialog, setShowAddUserDialog] = useState(false);
   const [showEditUserDialog, setShowEditUserDialog] = useState(false);
@@ -216,6 +219,15 @@ export default function AdminDashboard({ user, onLogout }) {
             >
               <LogOut className="w-4 h-4 mr-2" />
               Salir
+            </Button>
+          </div>
+          <div className="flex justify-end mt-2">
+            <Button
+              variant="ghost"
+              className="text-sm text-[#278D33]"
+              onClick={() => setShowEditProfileDialog(true)}
+            >
+              Mi Perfil
             </Button>
           </div>
         </div>
@@ -403,6 +415,16 @@ export default function AdminDashboard({ user, onLogout }) {
         onSubmit={handleUpdateTime}
         time={editingTime}
         swimmers={swimmers}
+      />
+
+
+      <EditProfileDialog
+        open={showEditProfileDialog}
+        onOpenChange={setShowEditProfileDialog}
+        user={user}
+        onUserUpdated={(updatedUser) => {
+          window.location.reload();
+        }}
       />
     </div>
   );

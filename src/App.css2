@@ -1,0 +1,249 @@
+/* Fuente y estilos básicos */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Estilos para los encabezados */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Contenedor principal */
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 10px; /* Ajuste para pantallas pequeñas */
+}
+
+/* Barra de navegación */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.navbar-toggler {
+  display: none; /* Se muestra solo en pantallas pequeñas */
+  background-color: #278D33;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.menu {
+  display: flex;
+  gap: 10px;
+}
+
+.menu.open {
+  display: block;
+}
+
+/* Estilo de las imágenes */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Transiciones */
+button, a {
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Flexbox para contenedores */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+@media (max-width: 768px) {
+  /* Ajuste en el contenedor de los botones */
+  .tiempo-buttons {
+    display: flex;
+    flex-direction: column; /* Cambiar la dirección de los botones en pantallas pequeñas */
+    align-items: flex-start; /* Alinearlos al inicio */
+    gap: 10px;
+  }
+
+  /* Estilo de los botones para mejor visualización */
+  .tiempo-buttons button {
+    width: 100%; /* Los botones ocupan todo el ancho disponible */
+    padding: 12px;
+    font-size: 14px; /* Asegurarse de que el texto se ajuste correctamente */
+  }
+
+  /* Mejorar la visibilidad del botón "Registrar Tiempo" */
+  .registrar-button {
+    width: 100%; /* Asegurarse de que se expanda */
+    font-size: 16px;
+    padding: 12px;
+    background-color: #278D33; /* Color verde consistente */
+    color: white;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 10px;
+    transition: background-color 0.2s ease;
+  }
+
+  .registrar-button:hover {
+    background-color: #1f6b28; /* Color cuando el botón esté en hover */
+  }
+
+  /* Ajuste en el tamaño de la tabla */
+  .gestion-tiempos-table {
+    font-size: 14px; /* Reducir tamaño de texto para pantallas pequeñas */
+    width: 100%;
+  }
+
+  /* Ajustar el título y el espacio alrededor */
+  .gestion-tiempos {
+    margin-top: 20px;
+    margin-bottom: 15px;
+  }
+  body {
+    font-size: 14px;
+  }
+
+  /* Navbar y botones */
+  .navbar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .navbar-toggler {
+    display: block;
+  }
+
+  /* Menú desplegable */
+  .menu {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .menu.open {
+    display: block;
+  }
+
+  .card-hover {
+    padding: 10px;
+  }
+
+  /* Contenedores flexibles en pantallas pequeñas */
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Ajuste del tamaño de los botones */
+  button {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .App {
+    padding: 5px;
+  }
+
+  /* Ajuste de tamaño de texto */
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Ajustes para pantallas aún más pequeñas */
+  .tiempo-buttons {
+    gap: 8px;
+  }
+
+  .tiempo-buttons button {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .registrar-button {
+    font-size: 14px;
+  }
+}
+
+/* Ajustes para pantallas muy pequeñas (móviles) */
+body {
+  font-size: 12px;
+}
+
+.navbar {
+  flex-direction: column;
+}
+
+.navbar-toggler {
+  background-color: #278D33;
+  padding: 12px;
+}
+
+.card-hover {
+  padding: 8px;
+}
+
+/* Mejora el tamaño de los botones */
+button {
+  font-size: 12px;
+  padding: 8px;
+}
+
+/* Scroll personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #278D33;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1f6b28;
+}
+

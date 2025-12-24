@@ -11,6 +11,7 @@ import LockerView from "@/components/LockerView";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import EditProfileDialog from "@/components/EditProfileDialog";
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
 const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
@@ -30,6 +31,8 @@ export default function SwimmerDashboard({ user, onLogout }) {
   const [filterStyle, setFilterStyle] = useState("all");
   const [filterDate, setFilterDate] = useState("");
   const [filterLogic, setFilterLogic] = useState("AND");
+
+  const [showEditProfileDialog, setShowEditProfileDialog] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -103,6 +106,15 @@ export default function SwimmerDashboard({ user, onLogout }) {
             >
               <LogOut className="w-4 h-4 mr-2" />
               Salir
+            </Button>
+          </div>
+          <div className="flex justify-end mt-2">
+            <Button
+              variant="ghost"
+              className="text-sm text-[#278D33]"
+              onClick={() => setShowEditProfileDialog(true)}
+            >
+              Mi Perfil
             </Button>
           </div>
         </div>
@@ -233,6 +245,17 @@ export default function SwimmerDashboard({ user, onLogout }) {
           </TabsContent>
         </Tabs>
       </main>
-    </div>
+
+      <EditProfileDialog
+        open={showEditProfileDialog}
+        onOpenChange={setShowEditProfileDialog}
+        user={user}
+        onUserUpdated={(updatedUser) => {
+          // Updating user state in parent would require a callback from App.js or context
+          // For now, we reload to refresh local storage and state is acceptable or we try to update if passed
+          window.location.reload();
+        }}
+      />
+    </div >
   );
 }
