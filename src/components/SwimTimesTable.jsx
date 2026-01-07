@@ -96,7 +96,7 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
                   ? "bg-gradient-to-r from-gray-200 to-gray-100 opacity-70"
                   : ""
                 }
-                ${time.minima === "si" ? "bg-red-100" : ""}
+                ${time.minima === "si" ? "bg-red-100" : time.minima_bizkaia === "si" ? "bg-green-100" : ""}
               `}
             >
 
