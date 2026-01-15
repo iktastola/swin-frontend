@@ -33,6 +33,8 @@ export default function CoachDashboard({ user, onLogout }) {
   const [filterStyle, setFilterStyle] = useState("all");
   const [filterDate, setFilterDate] = useState("");
   const [filterLogic, setFilterLogic] = useState("AND");
+  const [filterMinimaEH, setFilterMinimaEH] = useState("all");
+  const [filterMinimaBizkaia, setFilterMinimaBizkaia] = useState("all");
 
   const [showEditProfileDialog, setShowEditProfileDialog] = useState(false);
 
@@ -49,7 +51,7 @@ export default function CoachDashboard({ user, onLogout }) {
   useEffect(() => {
     let result = allTimes;
     // Si no hay filtros activos, mostrar todo
-    const isFiltering = selectedSwimmer || filterDistance !== "all" || filterStyle !== "all" || filterDate;
+    const isFiltering = selectedSwimmer || filterDistance !== "all" || filterStyle !== "all" || filterDate || filterMinimaEH !== "all" || filterMinimaBizkaia !== "all";
 
     if (isFiltering) {
       if (filterLogic === "AND") {
@@ -58,7 +60,9 @@ export default function CoachDashboard({ user, onLogout }) {
           const matchDistance = filterDistance === "all" || t.distance.toString() === filterDistance;
           const matchStyle = filterStyle === "all" || t.style === filterStyle;
           const matchDate = !filterDate || t.date.startsWith(filterDate);
-          return matchSwimmer && matchDistance && matchStyle && matchDate;
+          const matchMinimaEH = filterMinimaEH === "all" || t.minima_eh === filterMinimaEH;
+          const matchMinimaBizkaia = filterMinimaBizkaia === "all" || t.minima_bizkaia === filterMinimaBizkaia;
+          return matchSwimmer && matchDistance && matchStyle && matchDate && matchMinimaEH && matchMinimaBizkaia;
         });
       } else {
         // OR Logic
@@ -67,13 +71,15 @@ export default function CoachDashboard({ user, onLogout }) {
           const matchDistance = filterDistance !== "all" && t.distance.toString() === filterDistance;
           const matchStyle = filterStyle !== "all" && t.style === filterStyle;
           const matchDate = filterDate && t.date.startsWith(filterDate);
-          return matchSwimmer || matchDistance || matchStyle || matchDate;
+          const matchMinimaEH = filterMinimaEH !== "all" && t.minima_eh === filterMinimaEH;
+          const matchMinimaBizkaia = filterMinimaBizkaia !== "all" && t.minima_bizkaia === filterMinimaBizkaia;
+          return matchSwimmer || matchDistance || matchStyle || matchDate || matchMinimaEH || matchMinimaBizkaia;
         });
       }
     }
 
     setTimes(result);
-  }, [allTimes, selectedSwimmer, filterDistance, filterStyle, filterDate, filterLogic]);
+  }, [allTimes, selectedSwimmer, filterDistance, filterStyle, filterDate, filterLogic, filterMinimaEH, filterMinimaBizkaia]);
 
   const fetchData = async () => {
     try {
@@ -264,6 +270,34 @@ export default function CoachDashboard({ user, onLogout }) {
                     onChange={(e) => setFilterDate(e.target.value)}
                     className="bg-white"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-500 font-semibold uppercase">Mínima EH</Label>
+                  <Select value={filterMinimaEH} onValueChange={setFilterMinimaEH}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Todas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="si">SI</SelectItem>
+                      <SelectItem value="no">NO</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-500 font-semibold uppercase">Mínima Bizkaia</Label>
+                  <Select value={filterMinimaBizkaia} onValueChange={setFilterMinimaBizkaia}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Todas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="si">SI</SelectItem>
+                      <SelectItem value="no">NO</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
