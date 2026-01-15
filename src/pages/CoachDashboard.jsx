@@ -157,6 +157,35 @@ export default function CoachDashboard({ user, onLogout }) {
     }
   };
 
+  const handleBatchUpload = async (data) => {
+    let successCount = 0;
+    let failCount = 0;
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const uploadPromise = new Promise(async (resolve) => {
+      for (const time of data) {
+        try {
+          await axios.post(`${API}/times`, time, { headers });
+          successCount++;
+        } catch (error) {
+          failCount++;
+          console.error("Error uploading time:", error);
+        }
+      }
+      resolve();
+    });
+
+    toast.promise(uploadPromise, {
+      loading: 'Subiendo tiempos...',
+      success: () => {
+        fetchAllTimes();
+        return `Subida completada: ${successCount} éxito, ${failCount} error(es)`;
+      },
+      error: 'Error crítico en la subida',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
       {/* Header */}
@@ -311,6 +340,7 @@ export default function CoachDashboard({ user, onLogout }) {
                 swimmers={swimmers}
                 onDelete={handleDeleteTime}
                 onEdit={handleEditTime}
+                onUpload={handleBatchUpload}
                 showActions
               />
             )}
