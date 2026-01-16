@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +43,9 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
       <DialogContent className="sm:max-w-md" data-testid="add-user-dialog">
         <DialogHeader>
           <DialogTitle className="text-2xl text-[#278D33]">Crear Nuevo Usuario</DialogTitle>
+          <DialogDescription>
+            Introduce los datos para registrar un nuevo usuario en el club.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

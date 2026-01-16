@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +45,9 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
       <DialogContent className="sm:max-w-md" data-testid="edit-user-dialog">
         <DialogHeader>
           <DialogTitle className="text-2xl text-[#278D33]">Editar Usuario</DialogTitle>
+          <DialogDescription>
+            Modifica los datos del usuario y su foto de perfil.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center gap-4 py-2">
