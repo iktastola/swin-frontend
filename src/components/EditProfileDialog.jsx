@@ -50,7 +50,11 @@ export default function EditProfileDialog({ open, onOpenChange, user, onUserUpda
     });
 
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
-      toast.error("Cloudinary no está configurado. Por favor, reinicia el servidor (npm start) para aplicar los cambios del archivo .env.");
+      let missing = [];
+      if (!CLOUD_NAME) missing.push("REACT_APP_CLOUDINARY_CLOUD_NAME");
+      if (!UPLOAD_PRESET) missing.push("REACT_APP_CLOUDINARY_UPLOAD_PRESET");
+
+      toast.error(`Configuración incompleta en Render: falta(n) ${missing.join(", ")}`);
       return;
     }
 
