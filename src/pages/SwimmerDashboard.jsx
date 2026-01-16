@@ -11,6 +11,8 @@ import LockerView from "@/components/LockerView";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { User as UserIcon } from "lucide-react";
 import EditProfileDialog from "@/components/EditProfileDialog";
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
@@ -19,7 +21,7 @@ const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-export default function SwimmerDashboard({ user, onLogout }) {
+export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
   const [allTimes, setAllTimes] = useState([]);
   const [times, setTimes] = useState([]);
   const [personalBests, setPersonalBests] = useState([]);
@@ -129,9 +131,17 @@ export default function SwimmerDashboard({ user, onLogout }) {
       <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-[#278D33]">Club de Natación Astola</h1>
-              <p className="text-gray-600 mt-1">Bienvenido, {user.name}</p>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10 border border-[#278D33]/20 shadow-sm">
+                <AvatarImage src={user.avatar_url} />
+                <AvatarFallback className="bg-[#278D33]/10 text-[#278D33]">
+                  {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="h-5 w-5" />}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#278D33]">Club de Natación Astola</h1>
+                <p className="text-gray-600 mt-0.5">Bienvenido, {user.name}</p>
+              </div>
             </div>
             <Button
               onClick={onLogout}
@@ -314,9 +324,7 @@ export default function SwimmerDashboard({ user, onLogout }) {
         onOpenChange={setShowEditProfileDialog}
         user={user}
         onUserUpdated={(updatedUser) => {
-          // Updating user state in parent would require a callback from App.js or context
-          // For now, we reload to refresh local storage and state is acceptable or we try to update if passed
-          window.location.reload();
+          if (onUserUpdate) onUserUpdate(updatedUser);
         }}
       />
     </div >

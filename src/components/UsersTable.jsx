@@ -1,12 +1,13 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, User as UserIcon } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function UsersTable({ users, onDelete, onEdit }) {
   const getRoleBadgeColor = (role) => {
-    switch(role) {
+    switch (role) {
       case 'admin': return 'bg-purple-100 text-purple-800';
       case 'coach': return 'bg-blue-100 text-blue-800';
       case 'swimmer': return 'bg-[#278D33]/10 text-[#278D33]';
@@ -15,7 +16,7 @@ export default function UsersTable({ users, onDelete, onEdit }) {
   };
 
   const getRoleLabel = (role) => {
-    switch(role) {
+    switch (role) {
       case 'admin': return 'Administrador';
       case 'coach': return 'Entrenador';
       case 'swimmer': return 'Nadador';
@@ -28,6 +29,7 @@ export default function UsersTable({ users, onDelete, onEdit }) {
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50">
+            <TableHead className="font-semibold w-12"></TableHead>
             <TableHead className="font-semibold">Nombre</TableHead>
             <TableHead className="font-semibold">Email</TableHead>
             <TableHead className="font-semibold">Rol</TableHead>
@@ -40,6 +42,14 @@ export default function UsersTable({ users, onDelete, onEdit }) {
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id} className="hover:bg-gray-50" data-testid={`user-row-${user.id}`}>
+              <TableCell>
+                <Avatar className="h-8 w-8 border border-gray-200">
+                  <AvatarImage src={user.avatar_url} />
+                  <AvatarFallback className="bg-[#278D33]/10 text-[#278D33]">
+                    {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="h-4 w-4" />}
+                  </AvatarFallback>
+                </Avatar>
+              </TableCell>
               <TableCell className="font-medium">{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>

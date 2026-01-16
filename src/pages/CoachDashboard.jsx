@@ -12,6 +12,8 @@ import SwimmerSelector from "@/components/SwimmerSelector";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { User as UserIcon } from "lucide-react";
 import EditProfileDialog from "@/components/EditProfileDialog";
 import AuditTool from "@/components/AuditTool";
 
@@ -22,7 +24,7 @@ const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-export default function CoachDashboard({ user, onLogout }) {
+export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
   const [allTimes, setAllTimes] = useState([]);
   const [times, setTimes] = useState([]);
   const [swimmers, setSwimmers] = useState([]);
@@ -192,9 +194,17 @@ export default function CoachDashboard({ user, onLogout }) {
       <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-[#278D33]">Panel de Entrenador</h1>
-              <p className="text-gray-600 mt-1">Gestión de nadadores - {user.name}</p>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10 border border-[#278D33]/20 shadow-sm">
+                <AvatarImage src={user.avatar_url} />
+                <AvatarFallback className="bg-[#278D33]/10 text-[#278D33]">
+                  {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="h-5 w-5" />}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#278D33]">Panel de Entrenador</h1>
+                <p className="text-gray-600 mt-0.5">Gestión de nadadores - {user.name}</p>
+              </div>
             </div>
             <Button
               onClick={onLogout}
@@ -369,7 +379,7 @@ export default function CoachDashboard({ user, onLogout }) {
         onOpenChange={setShowEditProfileDialog}
         user={user}
         onUserUpdated={(updatedUser) => {
-          window.location.reload();
+          if (onUserUpdate) onUserUpdate(updatedUser);
         }}
       />
     </div>

@@ -12,7 +12,8 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
     password: '',
     role: 'swimmer',
     birth_date: '',
-    gender: 'fem'
+    gender: 'fem',
+    avatar_url: ''
   });
 
   const handleSubmit = (e) => {
@@ -21,7 +22,7 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
     if (!formData.birth_date) {
       formData.birth_date = new Date().toISOString().slice(0, 16);
     }
-    
+
     if (!formData.gender) {
       formData.gender = "fem";
     }
@@ -32,7 +33,8 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
       password: '',
       role: 'swimmer',
       birth_date: '',
-      gender: 'fem'
+      gender: 'fem',
+      avatar_url: ''
     });
   };
 
@@ -44,12 +46,22 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="avatar_url">URL del Avatar (Opcional)</Label>
+            <Input
+              id="avatar_url"
+              placeholder="https://cloudinary.com/..."
+              value={formData.avatar_url}
+              onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
+              data-testid="avatar-url-input"
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="name">Nombre completo</Label>
             <Input
               id="name"
               placeholder="Nombre completo"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
               data-testid="name-input"
             />
@@ -62,7 +74,7 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
               type="email"
               placeholder="correo@ejemplo.com"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
               data-testid="email-input"
             />
@@ -75,7 +87,7 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
               type="password"
               placeholder="Contraseña"
               value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
               data-testid="password-input"
             />
@@ -83,7 +95,7 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
 
           <div className="space-y-2">
             <Label htmlFor="role">Rol</Label>
-            <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
+            <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
               <SelectTrigger data-testid="role-select">
                 <SelectValue placeholder="Seleccionar rol" />
               </SelectTrigger>
@@ -95,9 +107,9 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
             </Select>
           </div>
 
-         <div className="space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="gender">Género</Label>
-	      <Select value={formData.gender} onValueChange={(value) => setFormData({...formData, gender: value})}>
+            <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
               <SelectTrigger data-testid="gender-select">
                 <SelectValue placeholder="Seleccionar genero" />
               </SelectTrigger>
@@ -114,7 +126,7 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
               id="birth_date"
               type="datetime-local"
               value={formData.birth_date}
-              onChange={(e) => setFormData({...formData, birth_date: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
               required
             />
           </div>

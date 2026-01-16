@@ -15,7 +15,7 @@ function App() {
     // Check if user is logged in
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
       setUser(JSON.parse(userData));
     }
@@ -26,6 +26,12 @@ function App() {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
+  };
+
+  const handleUserUpdate = (updatedUserData) => {
+    const newUser = { ...user, ...updatedUserData };
+    localStorage.setItem('user', JSON.stringify(newUser));
+    setUser(newUser);
   };
 
   const handleLogout = () => {
@@ -46,25 +52,25 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route 
-            path="/login" 
-            element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} 
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />}
           />
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
               !user ? (
                 <Navigate to="/login" />
               ) : user.role === "swimmer" ? (
-                <SwimmerDashboard user={user} onLogout={handleLogout} />
+                <SwimmerDashboard user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
               ) : user.role === "coach" ? (
-                <CoachDashboard user={user} onLogout={handleLogout} />
+                <CoachDashboard user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
               ) : user.role === "admin" ? (
-                <AdminDashboard user={user} onLogout={handleLogout} />
+                <AdminDashboard user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
               ) : (
                 <Navigate to="/login" />
               )
-            } 
+            }
           />
         </Routes>
       </BrowserRouter>
