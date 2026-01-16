@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import { Camera, User as UserIcon, Loader2 } from "lucide-react";
+import axios from "axios";
 
 export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
   const [formData, setFormData] = useState({
@@ -14,6 +18,7 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
     gender: 'fem',
     avatar_url: ''
   });
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -27,6 +32,38 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
       });
     }
   }, [user]);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+    const UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!CLOUD_NAME || !UPLOAD_PRESET) {
+      toast.error("Cloudinary no está configurado en las variables de entorno.");
+      return;
+    }
+
+    setUploading(true);
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+    uploadData.append("upload_preset", UPLOAD_PRESET);
+
+    try {
+      const res = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        uploadData
+      );
+      setFormData(prev => ({ ...prev, avatar_url: res.data.secure_url }));
+      toast.success("Imagen subida correctamente");
+    } catch (err) {
+      console.error("Error uploading to Cloudinary", err);
+      toast.error("Error al subir la imagen");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -50,26 +87,31 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex items-center gap-4 py-2">
-            <div className="h-16 w-16 rounded-full overflow-hidden border border-gray-200">
-              {formData.avatar_url ? (
-                <img src={formData.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full bg-gray-100 flex items-center justify-center text-gray-400">
-                  Sin foto
-                </div>
-              )}
-            </div>
-            <div className="flex-1 space-y-1">
-              <Label htmlFor="avatar_url" className="text-xs">URL del Avatar (Opcional)</Label>
-              <Input
-                id="avatar_url"
-                placeholder="https://..."
-                value={formData.avatar_url}
-                onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
-                className="h-8 text-xs"
+          {/* Avatar Upload */}
+          <div className="flex flex-col items-center gap-4 py-2">
+            <div className="relative group">
+              <Avatar className="h-24 w-24 border-2 border-[#278D33]/20 shadow-lg">
+                <AvatarImage src={formData.avatar_url} />
+                <AvatarFallback className="bg-[#278D33]/10 text-[#278D33] text-2xl font-bold">
+                  {formData.name ? formData.name.charAt(0).toUpperCase() : <UserIcon className="h-10 w-10" />}
+                </AvatarFallback>
+              </Avatar>
+              <label
+                htmlFor="admin-avatar-upload"
+                className="absolute inset-0 flex items-center justify-center bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+              >
+                {uploading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
+              </label>
+              <input
+                id="admin-avatar-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+                disabled={uploading}
               />
             </div>
+            <p className="text-xs text-gray-500">Haz clic para cambiar la foto del usuario</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="name">Nombre completo</Label>
