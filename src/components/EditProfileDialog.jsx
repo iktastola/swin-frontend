@@ -39,12 +39,18 @@ export default function EditProfileDialog({ open, onOpenChange, user, onUserUpda
     const file = e.target.files[0];
     if (!file) return;
 
-    // TODO: Obtener de .env o del usuario
+    // DEBUG: Verificar si las variables están llegando
     const CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
     const UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
 
+    console.log("Cloudinary Config Status:", {
+      hasCloudName: !!CLOUD_NAME,
+      hasPreset: !!UPLOAD_PRESET,
+      cloudNameValue: CLOUD_NAME // Public anyway
+    });
+
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
-      toast.error("Cloudinary no está configurado. Contacta con el administrador.");
+      toast.error("Cloudinary no está configurado. Por favor, reinicia el servidor (npm start) para aplicar los cambios del archivo .env.");
       return;
     }
 
