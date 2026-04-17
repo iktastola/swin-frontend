@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Plus, Users, Shirt, Clock } from "lucide-react";
+import { LogOut, Plus, Users, Shirt, Clock, Euro } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import UsersTable from "@/components/UsersTable";
@@ -20,6 +20,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User as UserIcon } from "lucide-react";
 import EditProfileDialog from "@/components/EditProfileDialog";
 import AuditTool from "@/components/AuditTool";
+import SepaPanel from "@/components/SepaPanel";
 
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
@@ -281,7 +282,7 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-3 bg-white shadow-md">
+          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-4 bg-white shadow-md">
             <TabsTrigger value="users" className="data-[state=active]:bg-[#278D33] data-[state=active]:text-white" data-testid="users-tab">
               <Users className="w-4 h-4 mr-2" />
               Usuarios
@@ -293,6 +294,10 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
             <TabsTrigger value="lockers" className="data-[state=active]:bg-[#278D33] data-[state=active]:text-white" data-testid="lockers-tab">
               <Shirt className="w-4 h-4 mr-2" />
               Taquillas
+            </TabsTrigger>
+            <TabsTrigger value="sepa" className="data-[state=active]:bg-[#278D33] data-[state=active]:text-white" data-testid="sepa-tab">
+              <Euro className="w-4 h-4 mr-2" />
+              SEPA
             </TabsTrigger>
           </TabsList>
 
@@ -459,6 +464,10 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
                 <LockersManagement swimmers={swimmers} />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="sepa" className="fade-in">
+            <SepaPanel />
           </TabsContent>
         </Tabs>
       </main>

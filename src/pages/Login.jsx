@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,10 +14,22 @@ export default function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [slowHint, setSlowHint] = useState(false);
+  const slowTimerRef = useRef(null);
+
+  // Pre-calentamiento: despertar el backend mientras el usuario teclea
+  // credenciales, para que el login no coincida con el cold start.
+  useEffect(() => {
+    axios.get(`${API}/health`, { timeout: 60000 }).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setSlowHint(false);
+
+    // Si tarda más de 5s, mostrar aviso de cold start
+    slowTimerRef.current = setTimeout(() => setSlowHint(true), 5000);
 
     try {
       const response = await axios.post(`${API}/auth/login`, {
@@ -30,7 +42,9 @@ export default function Login({ onLogin }) {
     } catch (error) {
       toast.error(error.response?.data?.detail || "Error al iniciar sesión");
     } finally {
+      clearTimeout(slowTimerRef.current);
       setLoading(false);
+      setSlowHint(false);
     }
   };
 
@@ -101,6 +115,11 @@ export default function Login({ onLogin }) {
             >
               {loading ? "Iniciando sesión..." : "Iniciar sesión"}
             </Button>
+            {slowHint && (
+              <p className="text-xs text-center text-gray-500 mt-3">
+                El servidor está arrancando, esto puede tardar unos 30 segundos la primera vez...
+              </p>
+            )}
           </form>
         </CardContent>
       </Card>

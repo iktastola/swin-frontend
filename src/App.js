@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "sonner";
 import Login from "@/pages/Login";
 import SwimmerDashboard from "@/pages/SwimmerDashboard";
 import CoachDashboard from "@/pages/CoachDashboard";
@@ -20,6 +22,32 @@ function App() {
       setUser(JSON.parse(userData));
     }
     setLoading(false);
+  }, []);
+
+  // Interceptor global: cualquier 401 (token caducado/inválido) expulsa al
+  // usuario al login. No aplica al propio /auth/login, que usa 401 para
+  // credenciales incorrectas.
+  useEffect(() => {
+    const id = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const status = error.response?.status;
+        const url = error.config?.url || "";
+        const isLoginCall = url.includes("/auth/login");
+
+        if (status === 401 && !isLoginCall) {
+          const wasLoggedIn = !!localStorage.getItem("token");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setUser(null);
+          if (wasLoggedIn) {
+            toast.error("Tu sesión ha caducado, vuelve a iniciar sesión");
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(id);
   }, []);
 
   const handleLogin = (userData, token) => {
