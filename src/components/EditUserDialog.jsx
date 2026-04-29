@@ -30,7 +30,7 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
         birth_date: user.birth_date ? new Date(user.birth_date).toISOString().slice(0, 16) : '',
         gender: user.gender ? user.gender : 'fem',
         avatar_url: user.avatar_url || '',
-        monthly_fee: user.monthly_fee != null ? String(user.monthly_fee) : ''
+        monthly_fee: user.monthly_fee != null ? String(user.monthly_fee) : '45'
       });
     }
   }, [user]);
@@ -197,13 +197,12 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
                 type="number"
                 step="0.01"
                 min="0"
-                placeholder="Vacío = tarifa por defecto del club"
                 value={formData.monthly_fee}
                 onChange={(e) => setFormData({ ...formData, monthly_fee: e.target.value })}
                 data-testid="edit-monthly-fee-input"
               />
               <p className="text-xs text-gray-500">
-                Si lo dejas vacío, este nadador pagará la tarifa estándar configurada en el sistema.
+                Tarifa estándar del club: 45 €/mes. Cámbiala solo si este nadador tiene una cuota distinta.
               </p>
             </div>
           )}
