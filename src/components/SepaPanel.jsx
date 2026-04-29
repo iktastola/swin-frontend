@@ -394,7 +394,7 @@ export default function SepaPanel() {
       <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-2xl text-gray-900 flex items-center gap-2">
-            <CalendarPlus className="w-6 h-6" /> Facturar mes (45€/nadador)
+            <CalendarPlus className="w-6 h-6" /> Facturar mes
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -419,13 +419,20 @@ export default function SepaPanel() {
             </Button>
           </div>
           <p className="text-xs text-gray-500 mt-3">
-            Crea un pago de 45€ por cada nadador con IBAN + mandato activo.
+            Crea un pago por cada nadador con IBAN + mandato activo, usando su <b>cuota mensual</b> personalizada
+            (o la tarifa estándar del club si no tiene cuota propia configurada).
             Idempotente: si ya hay pago para ese mes, no se duplica.
             Solo permite meses de sep–jun (temporada).
           </p>
 
           {billingResult && (
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-4 text-sm border-t pt-4">
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-4 text-sm border-t pt-4">
+              <div>
+                <p className="text-xs text-gray-500">Tarifa por defecto</p>
+                <p className="text-xl font-semibold">
+                  {Number(billingResult.default_fee ?? billingResult.amount_each ?? 0).toFixed(2)} €
+                </p>
+              </div>
               <div>
                 <p className="text-xs text-gray-500">Nadadores</p>
                 <p className="text-xl font-semibold">{billingResult.total_swimmers}</p>

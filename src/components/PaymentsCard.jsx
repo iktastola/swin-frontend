@@ -17,7 +17,11 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
   AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ListOrdered, RefreshCw, Trash2, RotateCcw } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader,
+  DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import { ListOrdered, RefreshCw, Trash2, RotateCcw, Plus, Loader2 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -34,6 +38,159 @@ const STATUSES = ["pending", "in_remesa", "paid", "returned", "failed"];
 
 function auth() {
   return { Authorization: `Bearer ${localStorage.getItem("token")}` };
+}
+
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function AddPaymentDialog({ swimmers, onCreated }) {
+  const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [concept, setConcept] = useState("");
+  const [dueDate, setDueDate] = useState(todayISO());
+  const [billingPeriod, setBillingPeriod] = useState("");
+
+  const reset = () => {
+    setUserId("");
+    setAmount("");
+    setConcept("");
+    setDueDate(todayISO());
+    setBillingPeriod("");
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!userId) return toast.error("Selecciona un nadador");
+    const n = Number(String(amount).replace(",", "."));
+    if (!Number.isFinite(n) || n <= 0) {
+      return toast.error("El importe debe ser un número > 0");
+    }
+    if (!concept.trim()) return toast.error("Indica un concepto");
+    if (!dueDate) return toast.error("Indica la fecha de vencimiento");
+    if (billingPeriod && !/^\d{4}-\d{2}$/.test(billingPeriod)) {
+      return toast.error("El período debe tener formato YYYY-MM");
+    }
+
+    setSubmitting(true);
+    try {
+      const body = {
+        user_id: userId,
+        amount: Math.round(n * 100) / 100,
+        concept: concept.trim(),
+        due_date: dueDate,
+      };
+      if (billingPeriod) body.billing_period = billingPeriod;
+
+      await axios.post(`${API}/sepa/payments`, body, { headers: auth() });
+      toast.success("Cobro añadido como pendiente");
+      reset();
+      setOpen(false);
+      onCreated?.();
+    } catch (err) {
+      toast.error(`Error: ${err.response?.data?.detail || err.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!submitting) setOpen(v); if (!v) reset(); }}>
+      <DialogTrigger asChild>
+        <Button className="bg-[#278D33] hover:bg-[#1f6b28] text-white h-10">
+          <Plus className="w-4 h-4 mr-2" /> Añadir cobro
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Añadir cobro a un nadador</DialogTitle>
+            <DialogDescription>
+              Crea un pago en estado <code>pending</code> que podrás incluir en la próxima remesa SEPA.
+              Útil para conceptos extra (equipación, campus, inscripciones…).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div>
+              <Label>Nadador</Label>
+              <Select value={userId} onValueChange={setUserId}>
+                <SelectTrigger><SelectValue placeholder="Selecciona un nadador" /></SelectTrigger>
+                <SelectContent>
+                  {swimmers.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="ap-concept">Concepto</Label>
+              <Input
+                id="ap-concept"
+                value={concept}
+                onChange={(e) => setConcept(e.target.value)}
+                placeholder="p.ej. Equipación 2026"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="ap-amount">Importe (€)</Label>
+                <Input
+                  id="ap-amount"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="ap-due">Vencimiento</Label>
+                <Input
+                  id="ap-due"
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="ap-period">Período (opcional, YYYY-MM)</Label>
+              <Input
+                id="ap-period"
+                type="month"
+                value={billingPeriod}
+                onChange={(e) => setBillingPeriod(e.target.value)}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Solo si quieres asociar este cobro a un mes concreto. Déjalo vacío para cobros sueltos.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={submitting}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={submitting} className="bg-[#278D33] hover:bg-[#1f6b28]">
+              {submitting
+                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Guardando...</>
+                : "Crear cobro"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export default function PaymentsCard() {
@@ -108,10 +265,14 @@ export default function PaymentsCard() {
 
   return (
     <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between gap-4">
         <CardTitle className="text-2xl text-gray-900 flex items-center gap-2">
           <ListOrdered className="w-6 h-6" /> Pagos
         </CardTitle>
+        <AddPaymentDialog
+          swimmers={users.filter((u) => u.role === "swimmer")}
+          onCreated={load}
+        />
       </CardHeader>
       <CardContent className="space-y-4">
 

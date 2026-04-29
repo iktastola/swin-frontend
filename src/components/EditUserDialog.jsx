@@ -16,7 +16,8 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
     role: 'swimmer',
     birth_date: '',
     gender: 'fem',
-    avatar_url: ''
+    avatar_url: '',
+    monthly_fee: ''
   });
   const [uploading, setUploading] = useState(false);
 
@@ -28,7 +29,8 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
         role: user.role,
         birth_date: user.birth_date ? new Date(user.birth_date).toISOString().slice(0, 16) : '',
         gender: user.gender ? user.gender : 'fem',
-        avatar_url: user.avatar_url || ''
+        avatar_url: user.avatar_url || '',
+        monthly_fee: user.monthly_fee != null ? String(user.monthly_fee) : ''
       });
     }
   }, [user]);
@@ -74,7 +76,17 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
     if (!formData.gender) {
       formData.gender = 'fem';
     }
-    onSubmit(formData);
+    const trimmedFee = String(formData.monthly_fee ?? '').trim();
+    let parsedFee = null;
+    if (trimmedFee !== '') {
+      const n = Number(trimmedFee.replace(',', '.'));
+      if (!Number.isFinite(n) || n < 0) {
+        toast.error('La cuota mensual debe ser un número ≥ 0');
+        return;
+      }
+      parsedFee = Math.round(n * 100) / 100;
+    }
+    onSubmit({ ...formData, monthly_fee: parsedFee });
   };
 
   return (
@@ -176,6 +188,25 @@ export default function EditUserDialog({ open, onOpenChange, onSubmit, user }) {
               </SelectContent>
             </Select>
           </div>
+
+          {formData.role === 'swimmer' && (
+            <div className="space-y-2">
+              <Label htmlFor="monthly_fee">Cuota mensual (€)</Label>
+              <Input
+                id="monthly_fee"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="Vacío = tarifa por defecto del club"
+                value={formData.monthly_fee}
+                onChange={(e) => setFormData({ ...formData, monthly_fee: e.target.value })}
+                data-testid="edit-monthly-fee-input"
+              />
+              <p className="text-xs text-gray-500">
+                Si lo dejas vacío, este nadador pagará la tarifa estándar configurada en el sistema.
+              </p>
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
