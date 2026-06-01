@@ -71,20 +71,25 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
           const matchDistance = filterDistance === "all" || t.distance.toString() === filterDistance;
           const matchStyle = filterStyle === "all" || t.style === filterStyle;
           const matchDate = !filterDate || t.date.startsWith(filterDate);
-          const matchMinimaEH = filterMinimaEH === "all" || t.minima_eh === filterMinimaEH;
+          const matchMinimaEH = filterMinimaEH === "all" || t.minima === filterMinimaEH;
           const matchMinimaBizkaia = filterMinimaBizkaia === "all" || t.minima_bizkaia === filterMinimaBizkaia;
           return matchSwimmer && matchDistance && matchStyle && matchDate && matchMinimaEH && matchMinimaBizkaia;
         });
       } else {
-        // OR Logic
+        // OR Logic: el nadador SIEMPRE se aplica con AND; el resto (distancia,
+        // estilo, fecha, mínima EH, mínima Bizkaia) con OR entre sí.
         result = result.filter(t => {
-          const matchSwimmer = selectedSwimmer && t.swimmer_id === selectedSwimmer;
-          const matchDistance = filterDistance !== "all" && t.distance.toString() === filterDistance;
-          const matchStyle = filterStyle !== "all" && t.style === filterStyle;
-          const matchDate = filterDate && t.date.startsWith(filterDate);
-          const matchMinimaEH = filterMinimaEH !== "all" && t.minima_eh === filterMinimaEH;
-          const matchMinimaBizkaia = filterMinimaBizkaia !== "all" && t.minima_bizkaia === filterMinimaBizkaia;
-          return matchSwimmer || matchDistance || matchStyle || matchDate || matchMinimaEH || matchMinimaBizkaia;
+          const matchSwimmer = !selectedSwimmer || t.swimmer_id === selectedSwimmer;
+
+          const orMatches = [];
+          if (filterDistance !== "all") orMatches.push(t.distance.toString() === filterDistance);
+          if (filterStyle !== "all") orMatches.push(t.style === filterStyle);
+          if (filterDate) orMatches.push(t.date.startsWith(filterDate));
+          if (filterMinimaEH !== "all") orMatches.push(t.minima === filterMinimaEH);
+          if (filterMinimaBizkaia !== "all") orMatches.push(t.minima_bizkaia === filterMinimaBizkaia);
+
+          const matchOthers = orMatches.length === 0 || orMatches.some(Boolean);
+          return matchSwimmer && matchOthers;
         });
       }
     }

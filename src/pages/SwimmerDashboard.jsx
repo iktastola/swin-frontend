@@ -54,7 +54,7 @@ export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
           const matchDistance = filterDistance === "all" || t.distance.toString() === filterDistance;
           const matchStyle = filterStyle === "all" || t.style === filterStyle;
           const matchDate = !filterDate || t.date.startsWith(filterDate);
-          const matchMinimaEH = filterMinimaEH === "all" || t.minima_eh === filterMinimaEH;
+          const matchMinimaEH = filterMinimaEH === "all" || t.minima === filterMinimaEH;
           const matchMinimaBizkaia = filterMinimaBizkaia === "all" || t.minima_bizkaia === filterMinimaBizkaia;
           return matchDistance && matchStyle && matchDate && matchMinimaEH && matchMinimaBizkaia;
         });
@@ -64,7 +64,7 @@ export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
           const matchDistance = filterDistance !== "all" && t.distance.toString() === filterDistance;
           const matchStyle = filterStyle !== "all" && t.style === filterStyle;
           const matchDate = filterDate && t.date.startsWith(filterDate);
-          const matchMinimaEH = filterMinimaEH !== "all" && t.minima_eh === filterMinimaEH;
+          const matchMinimaEH = filterMinimaEH !== "all" && t.minima === filterMinimaEH;
           const matchMinimaBizkaia = filterMinimaBizkaia !== "all" && t.minima_bizkaia === filterMinimaBizkaia;
           return matchDistance || matchStyle || matchDate || matchMinimaEH || matchMinimaBizkaia;
         });
