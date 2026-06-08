@@ -19,6 +19,7 @@ export default function AddTimeDialog({ open, onOpenChange, onSubmit, swimmers }
     date: new Date().toISOString().split("T")[0],
     competition: "",
     oficial: true,
+    piscina_metros: "25",
   });
 
   const handleSubmit = (e) => {
@@ -37,6 +38,7 @@ export default function AddTimeDialog({ open, onOpenChange, onSubmit, swimmers }
       date: new Date(formData.date).toISOString(),
       competition: formData.competition || null,
       oficial: formData.oficial,
+      piscina_metros: parseInt(formData.piscina_metros),
     };
 
     onSubmit(timeData);
@@ -51,6 +53,7 @@ export default function AddTimeDialog({ open, onOpenChange, onSubmit, swimmers }
       date: new Date().toISOString().split("T")[0],
       competition: "",
       oficial: true,
+      piscina_metros: "25",
     });
   };
 
@@ -116,6 +119,22 @@ export default function AddTimeDialog({ open, onOpenChange, onSubmit, swimmers }
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Piscina</Label>
+            <Select
+              value={formData.piscina_metros}
+              onValueChange={(v) => setFormData({ ...formData, piscina_metros: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tipo de piscina" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25m</SelectItem>
+                <SelectItem value="50">50m</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

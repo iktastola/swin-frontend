@@ -19,6 +19,7 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
     date: "",
     competition: "",
     oficial: true,
+    piscina_metros: "25",
   });
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
         date,
         competition: time.competition || "",
         oficial: time.oficial ?? true,
+        piscina_metros: (time.piscina_metros ?? 25).toString(),
       });
     }
   }, [time]);
@@ -60,6 +62,7 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
       date: new Date(formData.date).toISOString(),
       competition: formData.competition || null,
       oficial: formData.oficial,
+      piscina_metros: parseInt(formData.piscina_metros),
     };
 
     onSubmit(timeData);
@@ -127,6 +130,22 @@ export default function EditTimeDialog({ open, onOpenChange, onSubmit, time, swi
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Piscina</Label>
+            <Select
+              value={formData.piscina_metros}
+              onValueChange={(v) => setFormData({ ...formData, piscina_metros: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tipo de piscina" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25m</SelectItem>
+                <SelectItem value="50">50m</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
