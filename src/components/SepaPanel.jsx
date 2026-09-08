@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { API_URL as API } from "@/lib/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,9 +26,6 @@ import {
   DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
 const STATUS_COLORS = {
   generated: "bg-blue-100 text-blue-800",
   partially_returned: "bg-amber-100 text-amber-800",
@@ -42,11 +40,6 @@ const PAYMENT_STATUS_COLORS = {
   pending: "bg-amber-100 text-amber-800",
   failed: "bg-red-200 text-red-900",
 };
-
-function authHeaders() {
-  const token = localStorage.getItem("token");
-  return { Authorization: `Bearer ${token}` };
-}
 
 function firstOfCurrentMonth() {
   const d = new Date();
@@ -78,11 +71,10 @@ function ManageRemesaDialog({ remesa, onChanged }) {
     try {
       const { data } = await axios.get(
         `${API}/sepa/remesas/${remesa.id}/payments`,
-        { headers: authHeaders() },
       );
       setPagos(data || []);
       setSelected({});
-    } catch (e) {
+    } catch {
       toast.error("Error cargando pagos de la remesa");
     } finally {
       setLoading(false);
@@ -111,7 +103,7 @@ function ManageRemesaDialog({ remesa, onChanged }) {
       };
       const { data } = await axios.post(
         `${API}/sepa/remesas/${remesa.id}/returns`,
-        body, { headers: authHeaders() },
+        body,
       );
       toast.success(`Devoluciones marcadas: ${data.updated.length}`);
       setReason("");
@@ -129,7 +121,7 @@ function ManageRemesaDialog({ remesa, onChanged }) {
     try {
       const { data } = await axios.post(
         `${API}/sepa/remesas/${remesa.id}/close`,
-        null, { headers: authHeaders() },
+        null,
       );
       toast.success(`Remesa cerrada. ${data.marked_paid} pago(s) marcado(s) como pagados.`);
       await load();
@@ -283,9 +275,9 @@ export default function SepaPanel() {
   const fetchHistory = async () => {
     setLoadingHistory(true);
     try {
-      const { data } = await axios.get(`${API}/sepa/remesas`, { headers: authHeaders() });
+      const { data } = await axios.get(`${API}/sepa/remesas`);
       setHistory(data || []);
-    } catch (e) {
+    } catch {
       toast.error("Error cargando histórico de remesas");
     } finally {
       setLoadingHistory(false);
@@ -311,7 +303,7 @@ export default function SepaPanel() {
       if (collectionDate) body.collection_date = collectionDate;
 
       const { data } = await axios.post(
-        `${API}/sepa/remesas/generate`, body, { headers: authHeaders() },
+        `${API}/sepa/remesas/generate`, body,
       );
       setLastResult(data);
       toast.success(`Remesa generada: ${data.n_txs} cobros, ${data.total_amount.toFixed(2)} €`);
@@ -335,7 +327,6 @@ export default function SepaPanel() {
       const { data } = await axios.post(
         `${API}/sepa/billing/run?month=${billingMonth}`,
         null,
-        { headers: authHeaders() },
       );
       setBillingResult(data);
       toast.success(
@@ -353,7 +344,6 @@ export default function SepaPanel() {
     try {
       const { data } = await axios.delete(
         `${API}/sepa/remesas/${remesaId}`,
-        { headers: authHeaders() },
       );
       toast.success(
         `Remesa borrada. ${data.reverted_to_pending} pago(s) vuelto(s) a pendiente.`
@@ -369,7 +359,7 @@ export default function SepaPanel() {
     try {
       const res = await axios.get(
         `${API}/sepa/remesas/${remesaId}/xml`,
-        { headers: authHeaders(), responseType: "blob" },
+        { responseType: "blob" },
       );
       const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/xml" }));
       const link = document.createElement("a");
@@ -379,7 +369,7 @@ export default function SepaPanel() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-    } catch (e) {
+    } catch {
       toast.error("Error descargando XML");
     }
   };

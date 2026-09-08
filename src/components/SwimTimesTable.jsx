@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit, Download, Upload } from "lucide-react";
@@ -10,15 +10,23 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
   const [sortDirection, setSortDirection] = useState("desc");
   const fileInputRef = useRef(null);
 
-  const formatTime = (seconds) => {
+  const formatTime = useCallback((seconds) => {
     if (!seconds && seconds !== 0) return "-";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     const millis = Math.round((seconds - Math.floor(seconds)) * 1000);
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
-  };
+  }, []);
 
-  const getSwimmerName = (id) => swimmers.find((s) => s.id === id)?.name || "Desconocido";
+  const swimmerNames = useMemo(
+    () => new Map(swimmers.map((s) => [s.id, s.name])),
+    [swimmers]
+  );
+
+  const getSwimmerName = useCallback(
+    (id) => swimmerNames.get(id) || "Desconocido",
+    [swimmerNames]
+  );
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -31,20 +39,25 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
 
   const sortIndicator = (field) => sortField === field ? (sortDirection === "asc" ? "↑" : "↓") : "↕";
 
-  const sortedTimes = [...times].sort((a, b) => {
-    const A = a[sortField];
-    const B = b[sortField];
-    if (A < B) return sortDirection === "asc" ? -1 : 1;
-    if (A > B) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
+  const sortedTimes = useMemo(() => {
+    const aValFor = (t) => sortField === "swimmer" ? getSwimmerName(t.swimmer_id) : t[sortField];
+    return [...times].sort((a, b) => {
+      const aVal = aValFor(a);
+      const bVal = aValFor(b);
+      if (aVal === undefined || bVal === undefined) return 0;
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [times, sortField, sortDirection, getSwimmerName]);
 
   const handleDownloadCSV = () => {
-    const headers = ["Fecha", "Nadador", "Distancia", "Estilo", "Tiempo", "Ritmo", "Competición", "Oficial"];
+    const headers = ["Fecha", "Nadador", "Distancia", "Piscina", "Estilo", "Tiempo", "Ritmo", "Competición", "Oficial"];
     const rows = sortedTimes.map(t => [
       format(new Date(t.date), "yyyy-MM-dd"),
       getSwimmerName(t.swimmer_id),
       `${t.distance}m`,
+      `${t.piscina_metros ?? 25}m`,
       t.style,
       formatTime(t.time_seconds),
       formatTime(t.pace_100m),
@@ -125,6 +138,9 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
               <TableHead onClick={() => handleSort("distance")} className="cursor-pointer">
                 Distancia {sortIndicator("distance")}
               </TableHead>
+              <TableHead onClick={() => handleSort("piscina_metros")} className="cursor-pointer">
+                Piscina {sortIndicator("piscina_metros")}
+              </TableHead>
               <TableHead onClick={() => handleSort("style")} className="cursor-pointer">
                 Estilo {sortIndicator("style")}
               </TableHead>
@@ -164,6 +180,11 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
                   <TableCell className="font-medium text-gray-900">{getSwimmerName(time.swimmer_id)}</TableCell>
                 )}
                 <TableCell className="text-gray-600">{time.distance}m</TableCell>
+                <TableCell>
+                  <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-50 text-blue-700">
+                    {time.piscina_metros ?? 25}m
+                  </span>
+                </TableCell>
                 <TableCell>
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#278D33]/10 text-[#278D33]">
                     {time.style}

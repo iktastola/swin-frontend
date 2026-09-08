@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import axios from "axios";
+import { API_URL as API } from "@/lib/api";
 import { Save, Shirt } from "lucide-react";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
 
 const SIZES = ['9/10','10','11/12','12','14','16','XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
@@ -30,15 +27,13 @@ export default function LockersManagement({ swimmers }) {
 
   const fetchLocker = async (swimmerId) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      const response = await axios.get(`${API}/lockers/${swimmerId}`, { headers });
+      const response = await axios.get(`${API}/lockers/${swimmerId}`);
       setLockerData({
         pants_size: response.data.pants_size,
         shirt_size: response.data.shirt_size,
         hoodie_size: response.data.hoodie_size
       });
-    } catch (error) {
+    } catch {
       // Locker doesn't exist yet
       setLockerData({
         pants_size: '',
@@ -53,13 +48,10 @@ export default function LockersManagement({ swimmers }) {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      
       await axios.post(`${API}/lockers`, {
         swimmer_id: selectedSwimmer,
         ...lockerData
-      }, { headers });
+      });
 
       toast.success('Taquilla actualizada correctamente');
     } catch (error) {

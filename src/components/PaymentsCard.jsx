@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
+import { API_URL as API } from "@/lib/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,9 +24,6 @@ import {
 } from "@/components/ui/dialog";
 import { ListOrdered, RefreshCw, Trash2, RotateCcw, Plus, Loader2 } from "lucide-react";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
 const STATUS_COLORS = {
   in_remesa: "bg-blue-100 text-blue-800",
   paid: "bg-green-100 text-green-800",
@@ -35,10 +33,6 @@ const STATUS_COLORS = {
 };
 
 const STATUSES = ["pending", "in_remesa", "paid", "returned", "failed"];
-
-function auth() {
-  return { Authorization: `Bearer ${localStorage.getItem("token")}` };
-}
 
 function todayISO() {
   const d = new Date();
@@ -85,7 +79,7 @@ function AddPaymentDialog({ swimmers, onCreated }) {
       };
       if (billingPeriod) body.billing_period = billingPeriod;
 
-      await axios.post(`${API}/sepa/payments`, body, { headers: auth() });
+      await axios.post(`${API}/sepa/payments`, body);
       toast.success("Cobro añadido como pendiente");
       reset();
       setOpen(false);
@@ -211,7 +205,7 @@ export default function PaymentsCard() {
 
   const loadUsers = async () => {
     try {
-      const { data } = await axios.get(`${API}/users`, { headers: auth() });
+      const { data } = await axios.get(`${API}/users`);
       setUsers(data || []);
     } catch {
       // silencio: el filtro por nadador simplemente no se podrá usar
@@ -227,7 +221,7 @@ export default function PaymentsCard() {
       if (dateFrom) params.set("date_from", dateFrom);
       if (dateTo) params.set("date_to", dateTo);
       const url = `${API}/sepa/payments${params.toString() ? "?" + params : ""}`;
-      const { data } = await axios.get(url, { headers: auth() });
+      const { data } = await axios.get(url);
       setPayments(data || []);
     } catch (e) {
       toast.error(`Error cargando pagos: ${e.response?.data?.detail || e.message}`);
@@ -240,7 +234,7 @@ export default function PaymentsCard() {
 
   const handleRetry = async (id) => {
     try {
-      await axios.post(`${API}/sepa/payments/${id}/retry`, null, { headers: auth() });
+      await axios.post(`${API}/sepa/payments/${id}/retry`, null);
       toast.success("Pago reencolado como pendiente");
       load();
     } catch (e) {
@@ -250,7 +244,7 @@ export default function PaymentsCard() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API}/sepa/payments/${id}`, { headers: auth() });
+      await axios.delete(`${API}/sepa/payments/${id}`);
       toast.success("Pago borrado");
       load();
     } catch (e) {

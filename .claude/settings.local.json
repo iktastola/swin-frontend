@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs cat)",
+      "Bash(file /home/gelexpe/ASTOLA/swimrankings/*.py)",
+      "Bash(npx --no-install babel --presets react-app src/components/MinimasImportTool.jsx src/components/AddTimeDialog.jsx src/components/EditTimeDialog.jsx src/components/SwimTimesTable.jsx)",
+      "Bash(echo \"exit: $?\")",
+      "Read(//tmp/**)",
+      "Bash(python3 -m py_compile app/app/backend/server.py)",
+      "Bash(node *)",
+      "Bash(python3 -m py_compile send_times.py)",
+      "Bash(python3 send_times.py --help)"
+    ]
+  }
+}

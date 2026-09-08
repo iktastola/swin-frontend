@@ -170,7 +170,7 @@ export default function AddUserDialog({ open, onOpenChange, onSubmit }) {
                 <SelectValue placeholder="Seleccionar genero" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="fem">Fememenino</SelectItem>
+                <SelectItem value="fem">Femenino</SelectItem>
                 <SelectItem value="mas">Masculino</SelectItem>
               </SelectContent>
             </Select>

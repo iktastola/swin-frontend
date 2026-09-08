@@ -7,9 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Camera, User as UserIcon, Loader2 } from "lucide-react";
 import axios from "axios";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { API_URL as API } from "@/lib/api";
 
 export default function EditProfileDialog({ open, onOpenChange, user, onUserUpdated }) {
   const [formData, setFormData] = useState({
@@ -98,15 +96,12 @@ export default function EditProfileDialog({ open, onOpenChange, user, onUserUpda
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-
       const payload = {};
       if (formData.birth_date) payload.birth_date = formData.birth_date;
       if (formData.password) payload.password = formData.password;
       if (formData.avatar_url) payload.avatar_url = formData.avatar_url;
 
-      const response = await axios.patch(`${API}/users/me`, payload, { headers });
+      const response = await axios.patch(`${API}/users/me`, payload);
 
       toast.success("Perfil actualizado correctamente");
       if (onUserUpdated) {

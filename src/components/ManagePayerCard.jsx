@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_URL as API } from "@/lib/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,13 +16,6 @@ import {
   AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { UserCog, Eye, EyeOff, Loader2, Trash2 } from "lucide-react";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-function auth() {
-  return { Authorization: `Bearer ${localStorage.getItem("token")}` };
-}
 
 export default function ManagePayerCard() {
   const [swimmers, setSwimmers] = useState([]);
@@ -44,7 +38,7 @@ export default function ManagePayerCard() {
   );
 
   useEffect(() => {
-    axios.get(`${API}/users`, { headers: auth() })
+    axios.get(`${API}/users`)
       .then(({ data }) => setSwimmers(
         (data || []).filter((u) => u.role === "swimmer")
       ))
@@ -58,7 +52,7 @@ export default function ManagePayerCard() {
       // IBAN
       try {
         const { data } = await axios.get(
-          `${API}/sepa/bank-accounts/${uid}`, { headers: auth() }
+          `${API}/sepa/bank-accounts/${uid}`
         );
         setBank(data);
         setHolder(data.holder_name || "");
@@ -70,7 +64,7 @@ export default function ManagePayerCard() {
 
       // Mandato activo
       const { data: mlist } = await axios.get(
-        `${API}/sepa/mandates?user_id=${uid}&status=active`, { headers: auth() }
+        `${API}/sepa/mandates?user_id=${uid}&status=active`
       );
       setMandate(mlist?.[0] || null);
     } catch (e) {
@@ -93,7 +87,7 @@ export default function ManagePayerCard() {
         iban: iban.replace(/\s/g, ""),
         holder_name: holder,
         bic: bic || null,
-      }, { headers: auth() });
+      });
       toast.success("IBAN guardado");
       setIban("");
       loadPayer(userId);
@@ -106,7 +100,7 @@ export default function ManagePayerCard() {
     if (fullIban) { setFullIban(null); return; }
     try {
       const { data } = await axios.get(
-        `${API}/sepa/bank-accounts/${userId}/full`, { headers: auth() }
+        `${API}/sepa/bank-accounts/${userId}/full`
       );
       setFullIban(data.iban);
     } catch (e) {
@@ -116,7 +110,7 @@ export default function ManagePayerCard() {
 
   const handleDeleteIban = async () => {
     try {
-      await axios.delete(`${API}/sepa/bank-accounts/${userId}`, { headers: auth() });
+      await axios.delete(`${API}/sepa/bank-accounts/${userId}`);
       toast.success("IBAN borrado");
       setBank(null); setFullIban(null); setIban(""); setHolder(""); setBic("");
     } catch (e) {
@@ -134,7 +128,7 @@ export default function ManagePayerCard() {
         user_id: userId,
         signature_date: signatureDate,
         type: "RCUR",
-      }, { headers: auth() });
+      });
       toast.success("Mandato creado");
       loadPayer(userId);
     } catch (e) {
@@ -146,7 +140,7 @@ export default function ManagePayerCard() {
     if (!mandate) return;
     try {
       await axios.delete(
-        `${API}/sepa/mandates/${mandate.mandate_id}`, { headers: auth() },
+        `${API}/sepa/mandates/${mandate.mandate_id}`,
       );
       toast.success("Mandato cancelado");
       loadPayer(userId);

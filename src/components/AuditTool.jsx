@@ -1,27 +1,21 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
+import { API_URL as API } from '@/lib/api';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
-import { RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
+import { RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 
 const AuditTool = () => {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
-    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-    const API = `${BACKEND_URL}/api`;
 
     const handleAudit = async () => {
         setLoading(true);
         setResult(null);
-        const token = localStorage.getItem('token');
 
         try {
-            const response = await axios.post(`${API}/audit`, {}, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await axios.post(`${API}/audit`, {});
 
             setResult(response.data.stats);
             toast.success("Sincronización completada con éxito");

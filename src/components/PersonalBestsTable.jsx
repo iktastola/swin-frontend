@@ -1,14 +1,23 @@
+import { useMemo, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trophy } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function PersonalBestsTable({ personalBests }) {
-  const formatTime = (seconds) => {
+  const formatTime = useCallback((seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = (seconds % 60).toFixed(2);
     return mins > 0 ? `${mins}:${secs.padStart(5, '0')}` : `${secs}s`;
-  };
+  }, []);
+
+  const groupedByStyle = useMemo(() => {
+    return personalBests.reduce((acc, pb) => {
+      if (!acc[pb.style]) acc[pb.style] = [];
+      acc[pb.style].push(pb);
+      return acc;
+    }, {});
+  }, [personalBests]);
 
   if (personalBests.length === 0) {
     return (
@@ -18,13 +27,6 @@ export default function PersonalBestsTable({ personalBests }) {
       </div>
     );
   }
-
-  // Group by style
-  const groupedByStyle = personalBests.reduce((acc, pb) => {
-    if (!acc[pb.style]) acc[pb.style] = [];
-    acc[pb.style].push(pb);
-    return acc;
-  }, {});
 
   return (
     <div className="space-y-6">

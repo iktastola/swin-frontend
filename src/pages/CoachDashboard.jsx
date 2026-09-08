@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Plus, Users } from "lucide-react";
+import { LogOut, Plus } from "lucide-react";
 import axios from "axios";
+import { API_URL as API } from "@/lib/api";
 import { toast } from "sonner";
 import SwimTimesTable from "@/components/SwimTimesTable";
 import AddTimeDialog from "@/components/AddTimeDialog";
@@ -20,9 +20,6 @@ import AuditTool from "@/components/AuditTool";
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
 const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
 
 export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
   const [allTimes, setAllTimes] = useState([]);
@@ -90,19 +87,16 @@ export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-
       const [usersRes, timesRes] = await Promise.all([
-        axios.get(`${API}/users`, { headers }),
-        axios.get(`${API}/times`, { headers })
+        axios.get(`${API}/users`),
+        axios.get(`${API}/times`)
       ]);
 
       const swimmersList = usersRes.data.filter(u => u.role === 'swimmer');
       setSwimmers(swimmersList);
       setAllTimes(timesRes.data);
       setTimes(timesRes.data);
-    } catch (error) {
+    } catch {
       toast.error("Error al cargar datos");
     } finally {
       setLoading(false);
@@ -111,20 +105,16 @@ export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
 
   const fetchAllTimes = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      const response = await axios.get(`${API}/times`, { headers });
+      const response = await axios.get(`${API}/times`);
       setAllTimes(response.data);
-    } catch (error) {
+    } catch {
       toast.error("Error al cargar tiempos");
     }
   };
 
   const handleAddTime = async (timeData) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.post(`${API}/times`, timeData, { headers });
+      await axios.post(`${API}/times`, timeData);
       toast.success("Tiempo registrado correctamente");
       setShowAddDialog(false);
       fetchAllTimes();
@@ -140,9 +130,7 @@ export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
 
   const handleUpdateTime = async (timeData) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.put(`${API}/times/${editingTime.id}`, timeData, { headers });
+      await axios.put(`${API}/times/${editingTime.id}`, timeData);
       toast.success("Tiempo actualizado correctamente");
       setShowEditDialog(false);
       setEditingTime(null);
@@ -154,12 +142,10 @@ export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
 
   const handleDeleteTime = async (timeId) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.delete(`${API}/times/${timeId}`, { headers });
+      await axios.delete(`${API}/times/${timeId}`);
       toast.success("Tiempo eliminado");
       fetchAllTimes();
-    } catch (error) {
+    } catch {
       toast.error("Error al eliminar tiempo");
     }
   };
@@ -167,20 +153,20 @@ export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
   const handleBatchUpload = async (data) => {
     let successCount = 0;
     let failCount = 0;
-    const token = localStorage.getItem('token');
-    const headers = { Authorization: `Bearer ${token}` };
 
-    const uploadPromise = new Promise(async (resolve) => {
-      for (const time of data) {
-        try {
-          await axios.post(`${API}/times`, time, { headers });
-          successCount++;
-        } catch (error) {
-          failCount++;
-          console.error("Error uploading time:", error);
+    const uploadPromise = new Promise((resolve) => {
+      (async () => {
+        for (const time of data) {
+          try {
+            await axios.post(`${API}/times`, time);
+            successCount++;
+          } catch (error) {
+            failCount++;
+            console.error("Error uploading time:", error);
+          }
         }
-      }
-      resolve();
+        resolve();
+      })();
     });
 
     toast.promise(uploadPromise, {

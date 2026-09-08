@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, Trophy, Clock, Shirt } from "lucide-react";
 import axios from "axios";
+import { API_URL as API } from "@/lib/api";
 import { toast } from "sonner";
 import SwimTimesTable from "@/components/SwimTimesTable";
 import PersonalBestsTable from "@/components/PersonalBestsTable";
@@ -17,9 +18,6 @@ import EditProfileDialog from "@/components/EditProfileDialog";
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
 const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
 
 export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
   const [allTimes, setAllTimes] = useState([]);
@@ -59,14 +57,15 @@ export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
           return matchDistance && matchStyle && matchDate && matchMinimaEH && matchMinimaBizkaia;
         });
       } else {
-        // OR Logic
+        // OR Logic: excluimos filtros inactivos para no romper el resultado
         result = result.filter(t => {
-          const matchDistance = filterDistance !== "all" && t.distance.toString() === filterDistance;
-          const matchStyle = filterStyle !== "all" && t.style === filterStyle;
-          const matchDate = filterDate && t.date.startsWith(filterDate);
-          const matchMinimaEH = filterMinimaEH !== "all" && t.minima === filterMinimaEH;
-          const matchMinimaBizkaia = filterMinimaBizkaia !== "all" && t.minima_bizkaia === filterMinimaBizkaia;
-          return matchDistance || matchStyle || matchDate || matchMinimaEH || matchMinimaBizkaia;
+          const orMatches = [];
+          if (filterDistance !== "all") orMatches.push(t.distance.toString() === filterDistance);
+          if (filterStyle !== "all") orMatches.push(t.style === filterStyle);
+          if (filterDate) orMatches.push(t.date.startsWith(filterDate));
+          if (filterMinimaEH !== "all") orMatches.push(t.minima === filterMinimaEH);
+          if (filterMinimaBizkaia !== "all") orMatches.push(t.minima_bizkaia === filterMinimaBizkaia);
+          return orMatches.length === 0 || orMatches.some(Boolean);
         });
       }
     }
@@ -76,20 +75,17 @@ export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-
       const [timesRes, pbRes, lockerRes] = await Promise.all([
-        axios.get(`${API}/times`, { headers }),
-        axios.get(`${API}/personal-bests`, { headers }),
-        axios.get(`${API}/lockers/${user.id}`, { headers }).catch(() => ({ data: null }))
+        axios.get(`${API}/times`),
+        axios.get(`${API}/personal-bests`),
+        axios.get(`${API}/lockers/${user.id}`).catch(() => ({ data: null }))
       ]);
 
       setAllTimes(timesRes.data);
       setTimes(timesRes.data);
       setPersonalBests(pbRes.data);
       setLocker(lockerRes.data);
-    } catch (error) {
+    } catch {
       toast.error("Error al cargar datos");
     } finally {
       setLoading(false);
@@ -99,20 +95,20 @@ export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
   const handleBatchUpload = async (data) => {
     let successCount = 0;
     let failCount = 0;
-    const token = localStorage.getItem('token');
-    const headers = { Authorization: `Bearer ${token}` };
 
-    const uploadPromise = new Promise(async (resolve) => {
-      for (const time of data) {
-        try {
-          await axios.post(`${API}/times`, time, { headers });
-          successCount++;
-        } catch (error) {
-          failCount++;
-          console.error("Error uploading time:", error);
+    const uploadPromise = new Promise((resolve) => {
+      (async () => {
+        for (const time of data) {
+          try {
+            await axios.post(`${API}/times`, time);
+            successCount++;
+          } catch (error) {
+            failCount++;
+            console.error("Error uploading time:", error);
+          }
         }
-      }
-      resolve();
+        resolve();
+      })();
     });
 
     toast.promise(uploadPromise, {

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, Plus, Users, Shirt, Clock, Euro } from "lucide-react";
 import axios from "axios";
+import { API_URL as API } from "@/lib/api";
 import { toast } from "sonner";
 import UsersTable from "@/components/UsersTable";
 import LockersManagement from "@/components/LockersManagement";
@@ -20,14 +21,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User as UserIcon } from "lucide-react";
 import EditProfileDialog from "@/components/EditProfileDialog";
 import AuditTool from "@/components/AuditTool";
+import MinimasImportTool from "@/components/MinimasImportTool";
 import SepaPanel from "@/components/SepaPanel";
 
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
 const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
 
 export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
   const [users, setUsers] = useState([]);
@@ -99,11 +98,9 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      const response = await axios.get(`${API}/users`, { headers });
+const response = await axios.get(`${API}/users`);
       setUsers(response.data);
-    } catch (error) {
+    } catch {
       toast.error("Error al cargar usuarios");
     } finally {
       setLoading(false);
@@ -112,11 +109,10 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
 
   const fetchAllTimes = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      const response = await axios.get(`${API}/times`, { headers });
+      
+      const response = await axios.get(`${API}/times`);
       setAllTimes(response.data);
-    } catch (error) {
+    } catch {
       toast.error("Error al cargar tiempos");
     }
   };
@@ -125,9 +121,8 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
 
   const handleAddUser = async (userData) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.post(`${API}/auth/register`, userData, { headers });
+      
+      await axios.post(`${API}/auth/register`, userData);
       toast.success("Usuario creado correctamente");
       setShowAddUserDialog(false);
       fetchUsers();
@@ -143,9 +138,8 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
 
   const handleUpdateUser = async (userData) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.put(`${API}/users/${editingUser.id}`, userData, { headers });
+      
+      await axios.put(`${API}/users/${editingUser.id}`, userData);
       toast.success("Usuario actualizado correctamente");
       setShowEditUserDialog(false);
       setEditingUser(null);
@@ -157,23 +151,19 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
 
   const handleDeleteUser = async (userId) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.delete(`${API}/users/${userId}`, { headers });
+      
+      await axios.delete(`${API}/users/${userId}`);
       toast.success("Usuario eliminado");
       fetchUsers();
-    } catch (error) {
+    } catch {
       toast.error("Error al eliminar usuario");
     }
   };
 
   const handleAddTime = async (timeData) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.post(`${API}/times`, timeData, { headers });
-      toast.success("Tiempo registrado correctamente");
-      setShowAddTimeDialog(false);
+      
+      await axios.post(`${API}/times`, timeData);
       toast.success("Tiempo registrado correctamente");
       setShowAddTimeDialog(false);
       fetchAllTimes();
@@ -189,9 +179,8 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
 
   const handleUpdateTime = async (timeData) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.put(`${API}/times/${editingTime.id}`, timeData, { headers });
+      
+      await axios.put(`${API}/times/${editingTime.id}`, timeData);
       toast.success("Tiempo actualizado correctamente");
       setShowEditTimeDialog(false);
       setEditingTime(null);
@@ -203,12 +192,11 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
 
   const handleDeleteTime = async (timeId) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.delete(`${API}/times/${timeId}`, { headers });
+      
+      await axios.delete(`${API}/times/${timeId}`);
       toast.success("Tiempo eliminado");
       fetchAllTimes();
-    } catch (error) {
+    } catch {
       toast.error("Error al eliminar tiempo");
     }
   };
@@ -216,20 +204,20 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
   const handleBatchUpload = async (data) => {
     let successCount = 0;
     let failCount = 0;
-    const token = localStorage.getItem('token');
-    const headers = { Authorization: `Bearer ${token}` };
 
-    const uploadPromise = new Promise(async (resolve) => {
-      for (const time of data) {
-        try {
-          await axios.post(`${API}/times`, time, { headers });
-          successCount++;
-        } catch (error) {
-          failCount++;
-          console.error("Error uploading time:", error);
+    const uploadPromise = new Promise((resolve) => {
+      (async () => {
+        for (const time of data) {
+          try {
+            await axios.post(`${API}/times`, time);
+            successCount++;
+          } catch (error) {
+            failCount++;
+            console.error("Error uploading time:", error);
+          }
         }
-      }
-      resolve();
+        resolve();
+      })();
     });
 
     toast.promise(uploadPromise, {
@@ -335,6 +323,7 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
             <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
               <CardHeader>
                 <AuditTool />
+                <MinimasImportTool />
                 <div className="flex flex-col gap-6">
 
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

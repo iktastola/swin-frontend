@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import "@/App.css";
+import "@/lib/api";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import Login from "@/pages/Login";
-import SwimmerDashboard from "@/pages/SwimmerDashboard";
-import CoachDashboard from "@/pages/CoachDashboard";
-import AdminDashboard from "@/pages/AdminDashboard";
 import { Toaster } from "@/components/ui/sonner";
+
+const SwimmerDashboard = lazy(() => import("@/pages/SwimmerDashboard"));
+const CoachDashboard = lazy(() => import("@/pages/CoachDashboard"));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 
 function App() {
   const [user, setUser] = useState(null);
@@ -79,28 +81,38 @@ function App() {
   return (
     <div className="App">
       <BrowserRouter>
-        <Routes>
-          <Route
-            path="/login"
-            element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />}
-          />
-          <Route
-            path="/"
-            element={
-              !user ? (
-                <Navigate to="/login" />
-              ) : user.role === "swimmer" ? (
-                <SwimmerDashboard user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
-              ) : user.role === "coach" ? (
-                <CoachDashboard user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
-              ) : user.role === "admin" ? (
-                <AdminDashboard user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-        </Routes>
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50">
+            <div className="animate-pulse text-[#278D33] text-xl font-semibold">Cargando...</div>
+          </div>
+        }>
+          <Routes>
+            <Route
+              path="/login"
+              element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />}
+            />
+            <Route
+              path="/"
+              element={
+                !user ? (
+                  <Navigate to="/login" />
+                ) : user.role === "swimmer" ? (
+                  <SwimmerDashboard user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
+                ) : user.role === "coach" ? (
+                  <CoachDashboard user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
+                ) : user.role === "admin" ? (
+                  <AdminDashboard user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="*"
+              element={<Navigate to="/" />}
+            />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
       <Toaster />
     </div>
