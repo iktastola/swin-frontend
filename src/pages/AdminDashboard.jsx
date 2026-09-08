@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +41,7 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
   const [filterLogic, setFilterLogic] = useState("AND");
   const [filterMinimaEH, setFilterMinimaEH] = useState("all");
   const [filterMinimaBizkaia, setFilterMinimaBizkaia] = useState("all");
+  const [filterMejorTiempo, setFilterMejorTiempo] = useState("all");
 
   const [showEditProfileDialog, setShowEditProfileDialog] = useState(false);
 
@@ -57,11 +58,23 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
     fetchAllTimes();
   }, []);
 
+  // Best times per swimmer/distance/style
+  const bestTimes = useMemo(() => {
+    const bests = new Map();
+    allTimes.forEach(t => {
+      const key = `${t.swimmer_id}-${t.distance}-${t.style}`;
+      if (!bests.has(key) || t.time_seconds < bests.get(key)) {
+        bests.set(key, t.time_seconds);
+      }
+    });
+    return bests;
+  }, [allTimes]);
+
   // Filter Effect
   useEffect(() => {
     let result = allTimes;
     // Si no hay filtros activos, mostrar todo
-    const isFiltering = selectedSwimmer || filterDistance !== "all" || filterStyle !== "all" || filterDate || filterMinimaEH !== "all" || filterMinimaBizkaia !== "all";
+    const isFiltering = selectedSwimmer || filterDistance !== "all" || filterStyle !== "all" || filterDate || filterMinimaEH !== "all" || filterMinimaBizkaia !== "all" || filterMejorTiempo !== "all";
 
     if (isFiltering) {
       if (filterLogic === "AND") {
@@ -72,7 +85,10 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
           const matchDate = !filterDate || t.date.startsWith(filterDate);
           const matchMinimaEH = filterMinimaEH === "all" || t.minima === filterMinimaEH;
           const matchMinimaBizkaia = filterMinimaBizkaia === "all" || t.minima_bizkaia === filterMinimaBizkaia;
-          return matchSwimmer && matchDistance && matchStyle && matchDate && matchMinimaEH && matchMinimaBizkaia;
+          const key = `${t.swimmer_id}-${t.distance}-${t.style}`;
+          const isBest = t.time_seconds === bestTimes.get(key);
+          const matchMejorTiempo = filterMejorTiempo === "all" || (filterMejorTiempo === "si" ? isBest : !isBest);
+          return matchSwimmer && matchDistance && matchStyle && matchDate && matchMinimaEH && matchMinimaBizkaia && matchMejorTiempo;
         });
       } else {
         // OR Logic: el nadador SIEMPRE se aplica con AND; el resto (distancia,
@@ -86,6 +102,11 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
           if (filterDate) orMatches.push(t.date.startsWith(filterDate));
           if (filterMinimaEH !== "all") orMatches.push(t.minima === filterMinimaEH);
           if (filterMinimaBizkaia !== "all") orMatches.push(t.minima_bizkaia === filterMinimaBizkaia);
+          if (filterMejorTiempo !== "all") {
+            const key = `${t.swimmer_id}-${t.distance}-${t.style}`;
+            const isBest = t.time_seconds === bestTimes.get(key);
+            orMatches.push(filterMejorTiempo === "si" ? isBest : !isBest);
+          }
 
           const matchOthers = orMatches.length === 0 || orMatches.some(Boolean);
           return matchSwimmer && matchOthers;
@@ -94,7 +115,7 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
     }
 
     setTimes(result);
-  }, [allTimes, selectedSwimmer, filterDistance, filterStyle, filterDate, filterLogic, filterMinimaEH, filterMinimaBizkaia]);
+  }, [allTimes, selectedSwimmer, filterDistance, filterStyle, filterDate, filterLogic, filterMinimaEH, filterMinimaBizkaia, filterMejorTiempo, bestTimes]);
 
   const fetchUsers = async () => {
     try {
@@ -424,6 +445,20 @@ const response = await axios.get(`${API}/users`);
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Todas</SelectItem>
+                          <SelectItem value="si">SI</SelectItem>
+                          <SelectItem value="no">NO</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500 font-semibold uppercase">Mejor Tiempo</Label>
+                      <Select value={filterMejorTiempo} onValueChange={setFilterMejorTiempo}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Todos" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
                           <SelectItem value="si">SI</SelectItem>
                           <SelectItem value="no">NO</SelectItem>
                         </SelectContent>
