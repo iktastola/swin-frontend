@@ -130,6 +130,7 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
+              <TableHead className="w-8"></TableHead>
               {swimmers.length > 0 && (
                 <TableHead onClick={() => handleSort("swimmer")} className="cursor-pointer">
                   Nadador {sortIndicator("swimmer")}
@@ -176,6 +177,13 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
                   ${time.minima === "si" ? "bg-red-50/80" : time.minima_bizkaia === "si" ? "bg-green-50/80" : ""}
                 `}
               >
+                <TableCell className="w-8">
+                  {time.minima === "si" || time.minima_bizkaia === "si" ? (
+                    <div className={`w-3 h-3 rounded-full ${
+                      time.minima === "si" ? "bg-red-500" : "bg-green-500"
+                    }`} />
+                  ) : null}
+                </TableCell>
                 {swimmers.length > 0 && (
                   <TableCell className="font-medium text-gray-900">{getSwimmerName(time.swimmer_id)}</TableCell>
                 )}
