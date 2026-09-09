@@ -6,6 +6,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import Login from "@/pages/Login";
 import { Toaster } from "@/components/ui/sonner";
+import { API_URL as API } from "@/lib/api";
 
 const SwimmerDashboard = lazy(() => import("@/pages/SwimmerDashboard"));
 const CoachDashboard = lazy(() => import("@/pages/CoachDashboard"));
@@ -16,14 +17,30 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
+    // Check if user is logged in. A token en localStorage no garantiza que la
+    // sesión siga válida: validamos contra el backend para que un token
+    // caducado/inválido no deje la app "logueada" pero sin datos.
     const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
 
-    if (token && userData) {
-      setUser(JSON.parse(userData));
+    if (!token) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    axios
+      .get(`${API}/users/me`, { timeout: 60000 })
+      .then((res) => {
+        setUser(res.data);
+        localStorage.setItem('user', JSON.stringify(res.data));
+        setLoading(false);
+      })
+      .catch(() => {
+        // Token inválido o servidor no accesible: limpiar y volver al login.
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+        setLoading(false);
+      });
   }, []);
 
   // Interceptor global: cualquier 401 (token caducado/inválido) expulsa al
