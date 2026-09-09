@@ -1,14 +1,16 @@
 import { useState, useRef, useMemo, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit, Download, Upload } from "lucide-react";
+import { Trash2, Edit, Download, Upload, LineChart } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import SwimtimesChartDialog from "@/components/SwimtimesChartDialog";
 
 export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit, onUpload, showActions = false }) {
   const [sortField, setSortField] = useState("date");
   const [sortDirection, setSortDirection] = useState("desc");
   const fileInputRef = useRef(null);
+  const [chartTime, setChartTime] = useState(null);
 
   const formatTime = useCallback((seconds) => {
     if (!seconds && seconds !== 0) return "-";
@@ -221,6 +223,9 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
                 {showActions && (
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600" onClick={() => setChartTime(time)} title="Ver evolución">
+                        <LineChart className="w-4 h-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#278D33]" onClick={() => onEdit(time)}>
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -267,6 +272,21 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
           </Button>
         </div>
       </div>
+
+      {chartTime && (
+        <SwimtimesChartDialog
+          open={!!chartTime}
+          onOpenChange={(o) => { if (!o) setChartTime(null); }}
+          times={times}
+          event={{
+            swimmer_id: chartTime.swimmer_id,
+            distance: chartTime.distance,
+            style: chartTime.style,
+            piscina_metros: chartTime.piscina_metros ?? null,
+          }}
+          swimmerName={getSwimmerName(chartTime.swimmer_id)}
+        />
+      )}
     </div>
   );
 }

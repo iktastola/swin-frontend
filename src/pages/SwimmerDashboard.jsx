@@ -327,7 +327,12 @@ export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
                 {loading ? (
                   <div className="text-center py-8">Cargando...</div>
                 ) : (
-                  <PersonalBestsTable personalBests={personalBests} />
+                  <PersonalBestsTable
+                    personalBests={personalBests}
+                    allTimes={allTimes}
+                    swimmerId={user.id}
+                    swimmerName={user.name}
+                  />
                 )}
               </CardContent>
             </Card>
