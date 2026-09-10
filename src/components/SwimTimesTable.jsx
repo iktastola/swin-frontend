@@ -1,16 +1,19 @@
 import { useState, useRef, useMemo, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit, Download, Upload, LineChart } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import SwimtimesChartDialog from "@/components/SwimtimesChartDialog";
+import SwimmerBestsDialog from "@/components/SwimmerBestsDialog";
 
-export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit, onUpload, showActions = false }) {
+export default function SwimTimesTable({ times, swimmers = [], allTimes = [], onDelete, onEdit, onUpload, showActions = false }) {
   const [sortField, setSortField] = useState("date");
   const [sortDirection, setSortDirection] = useState("desc");
   const fileInputRef = useRef(null);
   const [chartTime, setChartTime] = useState(null);
+  const [bestsSwimmer, setBestsSwimmer] = useState(null);
 
   const formatTime = useCallback((seconds) => {
     if (!seconds && seconds !== 0) return "-";
@@ -22,6 +25,11 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
 
   const swimmerNames = useMemo(
     () => new Map(swimmers.map((s) => [s.id, s.name])),
+    [swimmers]
+  );
+
+  const swimmerAvatars = useMemo(
+    () => new Map(swimmers.map((s) => [s.id, s.avatar_url])),
     [swimmers]
   );
 
@@ -187,7 +195,21 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
                   ) : null}
                 </TableCell>
                 {swimmers.length > 0 && (
-                  <TableCell className="font-medium text-gray-900">{getSwimmerName(time.swimmer_id)}</TableCell>
+                  <TableCell className="font-medium text-gray-900">
+                    <div className="flex items-center gap-2">
+                      <Avatar
+                        className="h-8 w-8 border border-gray-200 shrink-0 transition-transform duration-300 hover:scale-[2] hover:z-50 shadow-md cursor-pointer"
+                        onClick={() => setBestsSwimmer({ id: time.swimmer_id, name: getSwimmerName(time.swimmer_id) })}
+                        title="Ver mejores marcas"
+                      >
+                        <AvatarImage src={swimmerAvatars.get(time.swimmer_id)} />
+                        <AvatarFallback className="bg-[#278D33]/10 text-[#278D33]">
+                          {getSwimmerName(time.swimmer_id).charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      {getSwimmerName(time.swimmer_id)}
+                    </div>
+                  </TableCell>
                 )}
                 <TableCell className="text-gray-600">{time.distance}m</TableCell>
                 <TableCell>
@@ -285,6 +307,16 @@ export default function SwimTimesTable({ times, swimmers = [], onDelete, onEdit,
             piscina_metros: chartTime.piscina_metros ?? null,
           }}
           swimmerName={getSwimmerName(chartTime.swimmer_id)}
+        />
+      )}
+
+      {bestsSwimmer && (
+        <SwimmerBestsDialog
+          open={!!bestsSwimmer}
+          onOpenChange={(o) => { if (!o) setBestsSwimmer(null); }}
+          swimmerId={bestsSwimmer.id}
+          swimmerName={bestsSwimmer.name}
+          allTimes={allTimes.length > 0 ? allTimes : times}
         />
       )}
     </div>

@@ -462,6 +462,7 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
                   <SwimTimesTable
                     times={times}
                     swimmers={swimmers}
+                    allTimes={allTimes}
                     onDelete={handleDeleteTime}
                     onEdit={handleEditTime}
                     onUpload={handleBatchUpload}
