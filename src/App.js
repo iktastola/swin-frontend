@@ -36,10 +36,14 @@ function App() {
           localStorage.setItem('user', JSON.stringify(res.data));
         }
       })
-      .catch(() => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
+      .catch((error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        } else {
+          toast.error("Error de conexión, inténtalo de nuevo");
+        }
       });
   }, []);
 

@@ -10,9 +10,11 @@ import { useState } from "react";
 import { Trash2, Edit, User as UserIcon } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import SwimmerBestsDialog from "@/components/SwimmerBestsDialog";
 
-export default function UsersTable({ users, onDelete, onEdit }) {
+export default function UsersTable({ users, onDelete, onEdit, allTimes = [] }) {
   const [userToDelete, setUserToDelete] = useState(null);
+  const [selectedSwimmer, setSelectedSwimmer] = useState(null);
   const getRoleBadgeColor = (role) => {
     switch (role) {
       case 'admin': return 'bg-purple-100 text-purple-800';
@@ -32,6 +34,7 @@ export default function UsersTable({ users, onDelete, onEdit }) {
   };
 
   return (
+    <>
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
@@ -50,7 +53,10 @@ export default function UsersTable({ users, onDelete, onEdit }) {
           {users.map((user) => (
             <TableRow key={user.id} className="hover:bg-gray-50" data-testid={`user-row-${user.id}`}>
               <TableCell>
-                <Avatar className="h-8 w-8 border border-gray-200">
+                <Avatar
+                  className={`h-12 w-12 border border-gray-200 transition-transform duration-300 hover:scale-[2.5] hover:z-50 shadow-lg ${user.role === 'swimmer' ? 'cursor-pointer' : ''}`}
+                  onClick={() => user.role === 'swimmer' && setSelectedSwimmer(user)}
+                >
                   <AvatarImage src={user.avatar_url} />
                   <AvatarFallback className="bg-[#278D33]/10 text-[#278D33]">
                     {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="h-4 w-4" />}
@@ -123,6 +129,15 @@ export default function UsersTable({ users, onDelete, onEdit }) {
         </TableBody>
       </Table>
     </div>
+
+    <SwimmerBestsDialog
+      open={!!selectedSwimmer}
+      onOpenChange={(open) => { if (!open) setSelectedSwimmer(null); }}
+      swimmerId={selectedSwimmer?.id}
+      swimmerName={selectedSwimmer?.name}
+      allTimes={allTimes}
+    />
+    </>
   );
 }
 

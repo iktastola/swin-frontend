@@ -167,10 +167,10 @@ export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 border border-[#278D33]/20 shadow-sm">
+              <Avatar className="h-16 w-16 border border-[#278D33]/20 shadow-sm">
                 <AvatarImage src={user.avatar_url} />
                 <AvatarFallback className="bg-[#278D33]/10 text-[#278D33]">
-                  {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="h-5 w-5" />}
+                  {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="h-8 w-8" />}
                 </AvatarFallback>
               </Avatar>
               <div>
