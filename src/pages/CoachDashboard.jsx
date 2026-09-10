@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogOut, Plus } from "lucide-react";
@@ -22,6 +23,7 @@ const DISTANCES = [50, 100, 200, 400, 800, 1500];
 const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
 
 export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
+  const queryClient = useQueryClient();
   const [allTimes, setAllTimes] = useState([]);
   const [times, setTimes] = useState([]);
   const [swimmers, setSwimmers] = useState([]);
@@ -43,9 +45,35 @@ export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
   const [editingTime, setEditingTime] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const { data: usersData } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const { data } = await axios.get(`${API}/users`);
+      return data;
+    },
+  });
+
+  const { data: timesData } = useQuery({
+    queryKey: ["times"],
+    queryFn: async () => {
+      const { data } = await axios.get(`${API}/times`);
+      return data;
+    },
+  });
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (usersData) {
+      setSwimmers(usersData.filter(u => u.role === 'swimmer'));
+    }
+  }, [usersData]);
+
+  useEffect(() => {
+    if (timesData) {
+      setAllTimes(timesData);
+      setTimes(timesData);
+      setLoading(false);
+    }
+  }, [timesData]);
 
   // Best times per swimmer/distance/style
   const bestTimes = useMemo(() => {
@@ -106,39 +134,12 @@ export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
     setTimes(result);
   }, [allTimes, selectedSwimmer, filterDistance, filterStyle, filterDate, filterLogic, filterMinimaEH, filterMinimaBizkaia, filterMejorTiempo, bestTimes]);
 
-  const fetchData = async () => {
-    try {
-      const [usersRes, timesRes] = await Promise.all([
-        axios.get(`${API}/users`),
-        axios.get(`${API}/times`)
-      ]);
-
-      const swimmersList = usersRes.data.filter(u => u.role === 'swimmer');
-      setSwimmers(swimmersList);
-      setAllTimes(timesRes.data);
-      setTimes(timesRes.data);
-    } catch {
-      toast.error("Error al cargar datos");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAllTimes = async () => {
-    try {
-      const response = await axios.get(`${API}/times`);
-      setAllTimes(response.data);
-    } catch {
-      toast.error("Error al cargar tiempos");
-    }
-  };
-
   const handleAddTime = async (timeData) => {
     try {
       await axios.post(`${API}/times`, timeData);
       toast.success("Tiempo registrado correctamente");
       setShowAddDialog(false);
-      fetchAllTimes();
+      queryClient.invalidateQueries({ queryKey: ["times"] });
     } catch (error) {
       toast.error(error.response?.data?.detail || "Error al registrar tiempo");
     }
@@ -155,7 +156,7 @@ export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
       toast.success("Tiempo actualizado correctamente");
       setShowEditDialog(false);
       setEditingTime(null);
-      fetchAllTimes();
+      queryClient.invalidateQueries({ queryKey: ["times"] });
     } catch (error) {
       toast.error(error.response?.data?.detail || "Error al actualizar tiempo");
     }
@@ -165,7 +166,7 @@ export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
     try {
       await axios.delete(`${API}/times/${timeId}`);
       toast.success("Tiempo eliminado");
-      fetchAllTimes();
+      queryClient.invalidateQueries({ queryKey: ["times"] });
     } catch {
       toast.error("Error al eliminar tiempo");
     }
@@ -193,7 +194,7 @@ export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
     toast.promise(uploadPromise, {
       loading: 'Subiendo tiempos...',
       success: () => {
-        fetchAllTimes();
+        queryClient.invalidateQueries({ queryKey: ["times"] });
         return `Subida completada: ${successCount} éxito, ${failCount} error(es)`;
       },
       error: 'Error crítico en la subida',

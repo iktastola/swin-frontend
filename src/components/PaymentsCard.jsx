@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { API_URL as API } from "@/lib/api";
 import { toast } from "sonner";
@@ -188,9 +189,7 @@ function AddPaymentDialog({ swimmers, onCreated }) {
 }
 
 export default function PaymentsCard() {
-  const [payments, setPayments] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   // Filtros
   const [statusFilter, setStatusFilter] = useState("");
@@ -198,45 +197,42 @@ export default function PaymentsCard() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const { data } = await axios.get(`${API}/users`);
+      return data || [];
+    },
+  });
+
+  const queryParams = useMemo(() => {
+    const params = new URLSearchParams();
+    if (statusFilter) params.set("status", statusFilter);
+    if (userFilter) params.set("user_id", userFilter);
+    if (dateFrom) params.set("date_from", dateFrom);
+    if (dateTo) params.set("date_to", dateTo);
+    return params.toString();
+  }, [statusFilter, userFilter, dateFrom, dateTo]);
+
+  const { data: payments = [], isPending: loading, refetch } = useQuery({
+    queryKey: ["sepa/payments", queryParams],
+    queryFn: async () => {
+      const url = `${API}/sepa/payments${queryParams ? "?" + queryParams : ""}`;
+      const { data } = await axios.get(url);
+      return data || [];
+    },
+  });
+
   const usersById = useMemo(
     () => Object.fromEntries(users.map((u) => [u.id, u])),
     [users],
   );
 
-  const loadUsers = async () => {
-    try {
-      const { data } = await axios.get(`${API}/users`);
-      setUsers(data || []);
-    } catch {
-      // silencio: el filtro por nadador simplemente no se podrá usar
-    }
-  };
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (statusFilter) params.set("status", statusFilter);
-      if (userFilter) params.set("user_id", userFilter);
-      if (dateFrom) params.set("date_from", dateFrom);
-      if (dateTo) params.set("date_to", dateTo);
-      const url = `${API}/sepa/payments${params.toString() ? "?" + params : ""}`;
-      const { data } = await axios.get(url);
-      setPayments(data || []);
-    } catch (e) {
-      toast.error(`Error cargando pagos: ${e.response?.data?.detail || e.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { loadUsers(); load(); }, []);
-
   const handleRetry = async (id) => {
     try {
       await axios.post(`${API}/sepa/payments/${id}/retry`, null);
       toast.success("Pago reencolado como pendiente");
-      load();
+      queryClient.invalidateQueries({ queryKey: ["sepa/payments"] });
     } catch (e) {
       toast.error(`Error: ${e.response?.data?.detail || e.message}`);
     }
@@ -246,7 +242,7 @@ export default function PaymentsCard() {
     try {
       await axios.delete(`${API}/sepa/payments/${id}`);
       toast.success("Pago borrado");
-      load();
+      queryClient.invalidateQueries({ queryKey: ["sepa/payments"] });
     } catch (e) {
       toast.error(`Error: ${e.response?.data?.detail || e.message}`);
     }
@@ -265,7 +261,7 @@ export default function PaymentsCard() {
         </CardTitle>
         <AddPaymentDialog
           swimmers={users.filter((u) => u.role === "swimmer")}
-          onCreated={load}
+          onCreated={() => queryClient.invalidateQueries({ queryKey: ["sepa/payments"] })}
         />
       </CardHeader>
       <CardContent className="space-y-4">
@@ -312,7 +308,7 @@ export default function PaymentsCard() {
             <Input type="date" value={dateTo}
               onChange={(e) => setDateTo(e.target.value)} />
           </div>
-          <Button onClick={load} disabled={loading}
+          <Button onClick={() => refetch()} disabled={loading}
             className="bg-[#278D33] hover:bg-[#1f6b28] text-white h-10">
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Filtrar

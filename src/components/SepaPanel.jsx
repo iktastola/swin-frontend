@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { API_URL as API } from "@/lib/api";
 import { toast } from "sonner";
@@ -259,32 +260,25 @@ function ManageRemesaDialog({ remesa, onChanged }) {
 }
 
 export default function SepaPanel() {
+  const queryClient = useQueryClient();
   const [dateFrom, setDateFrom] = useState(firstOfCurrentMonth());
   const [dateTo, setDateTo] = useState(lastOfCurrentMonth());
   const [collectionDate, setCollectionDate] = useState("");
   const [generating, setGenerating] = useState(false);
   const [lastResult, setLastResult] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // Facturar mes
   const [billingMonth, setBillingMonth] = useState(currentMonthKey());
   const [billing, setBilling] = useState(false);
   const [billingResult, setBillingResult] = useState(null);
 
-  const fetchHistory = async () => {
-    setLoadingHistory(true);
-    try {
+  const { data: history = [], isPending: loadingHistory } = useQuery({
+    queryKey: ["sepa/remesas"],
+    queryFn: async () => {
       const { data } = await axios.get(`${API}/sepa/remesas`);
-      setHistory(data || []);
-    } catch {
-      toast.error("Error cargando histórico de remesas");
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
-
-  useEffect(() => { fetchHistory(); }, []);
+      return data || [];
+    },
+  });
 
   const handleGenerate = async () => {
     if (!dateFrom || !dateTo) {
@@ -307,7 +301,7 @@ export default function SepaPanel() {
       );
       setLastResult(data);
       toast.success(`Remesa generada: ${data.n_txs} cobros, ${data.total_amount.toFixed(2)} €`);
-      fetchHistory();
+      queryClient.invalidateQueries({ queryKey: ["sepa/remesas"] });
     } catch (err) {
       const msg = err.response?.data?.detail || err.message;
       toast.error(`Error: ${msg}`);
@@ -348,7 +342,7 @@ export default function SepaPanel() {
       toast.success(
         `Remesa borrada. ${data.reverted_to_pending} pago(s) vuelto(s) a pendiente.`
       );
-      fetchHistory();
+      queryClient.invalidateQueries({ queryKey: ["sepa/remesas"] });
       if (lastResult?.remesa_id === remesaId) setLastResult(null);
     } catch (err) {
       toast.error(`Error: ${err.response?.data?.detail || err.message}`);
@@ -602,7 +596,7 @@ export default function SepaPanel() {
                         >
                           <Download className="w-3 h-3 mr-1" /> XML
                         </Button>
-                        <ManageRemesaDialog remesa={r} onChanged={fetchHistory} />
+                        <ManageRemesaDialog remesa={r} onChanged={() => queryClient.invalidateQueries({ queryKey: ["sepa/remesas"] })} />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button

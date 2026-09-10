@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,7 @@ import { Save, Shirt } from "lucide-react";
 const SIZES = ['9/10','10','11/12','12','14','16','XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 export default function LockersManagement({ swimmers }) {
+  const queryClient = useQueryClient();
   const [selectedSwimmer, setSelectedSwimmer] = useState('');
   const [lockerData, setLockerData] = useState({
     pants_size: '',
@@ -19,29 +21,28 @@ export default function LockersManagement({ swimmers }) {
   });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (selectedSwimmer) {
-      fetchLocker(selectedSwimmer);
-    }
-  }, [selectedSwimmer]);
+  const { data: fetchedLocker } = useQuery({
+    queryKey: ["lockers", selectedSwimmer],
+    queryFn: async () => {
+      const { data } = await axios.get(`${API}/lockers/${selectedSwimmer}`);
+      return data;
+    },
+    enabled: !!selectedSwimmer,
+  });
 
-  const fetchLocker = async (swimmerId) => {
-    try {
-      const response = await axios.get(`${API}/lockers/${swimmerId}`);
+  useEffect(() => {
+    if (fetchedLocker) {
       setLockerData({
-        pants_size: response.data.pants_size,
-        shirt_size: response.data.shirt_size,
-        hoodie_size: response.data.hoodie_size
+        pants_size: fetchedLocker.pants_size,
+        shirt_size: fetchedLocker.shirt_size,
+        hoodie_size: fetchedLocker.hoodie_size
       });
-    } catch {
-      // Locker doesn't exist yet
-      setLockerData({
-        pants_size: '',
-        shirt_size: '',
-        hoodie_size: ''
-      });
+    } else if (selectedSwimmer && fetchedLocker === undefined) {
+      // Loading or no locker yet
+    } else {
+      setLockerData({ pants_size: '', shirt_size: '', hoodie_size: '' });
     }
-  };
+  }, [fetchedLocker, selectedSwimmer]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,6 +55,7 @@ export default function LockersManagement({ swimmers }) {
       });
 
       toast.success('Taquilla actualizada correctamente');
+      queryClient.invalidateQueries({ queryKey: ["lockers", selectedSwimmer] });
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Error al actualizar taquilla');
     } finally {

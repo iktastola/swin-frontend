@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,6 +21,7 @@ const DISTANCES = [50, 100, 200, 400, 800, 1500];
 const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
 
 export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
+  const queryClient = useQueryClient();
   const [allTimes, setAllTimes] = useState([]);
   const [times, setTimes] = useState([]);
   const [personalBests, setPersonalBests] = useState([]);
@@ -37,9 +39,43 @@ export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
 
   const [showEditProfileDialog, setShowEditProfileDialog] = useState(false);
 
+  const { data: timesData } = useQuery({
+    queryKey: ["times"],
+    queryFn: async () => {
+      const { data } = await axios.get(`${API}/times`);
+      return data;
+    },
+  });
+
+  const { data: pbData } = useQuery({
+    queryKey: ["personal-bests"],
+    queryFn: async () => {
+      const { data } = await axios.get(`${API}/personal-bests`);
+      return data;
+    },
+  });
+
+  const { data: lockerData } = useQuery({
+    queryKey: ["lockers", user.id],
+    queryFn: async () => {
+      try {
+        const { data } = await axios.get(`${API}/lockers/${user.id}`);
+        return data;
+      } catch {
+        return null;
+      }
+    },
+  });
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (timesData && pbData !== undefined) {
+      setAllTimes(timesData);
+      setTimes(timesData);
+      setPersonalBests(pbData);
+      setLocker(lockerData);
+      setLoading(false);
+    }
+  }, [timesData, pbData, lockerData]);
 
   // Best times per swimmer/distance/style
   const bestTimes = useMemo(() => {
@@ -94,25 +130,6 @@ export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
     setTimes(result);
   }, [allTimes, filterDistance, filterStyle, filterDate, filterLogic, filterMinimaEH, filterMinimaBizkaia, filterMejorTiempo, bestTimes]);
 
-  const fetchData = async () => {
-    try {
-      const [timesRes, pbRes, lockerRes] = await Promise.all([
-        axios.get(`${API}/times`),
-        axios.get(`${API}/personal-bests`),
-        axios.get(`${API}/lockers/${user.id}`).catch(() => ({ data: null }))
-      ]);
-
-      setAllTimes(timesRes.data);
-      setTimes(timesRes.data);
-      setPersonalBests(pbRes.data);
-      setLocker(lockerRes.data);
-    } catch {
-      toast.error("Error al cargar datos");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleBatchUpload = async (data) => {
     let successCount = 0;
     let failCount = 0;
@@ -135,7 +152,8 @@ export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
     toast.promise(uploadPromise, {
       loading: 'Subiendo tiempos...',
       success: () => {
-        fetchData();
+        queryClient.invalidateQueries({ queryKey: ["times"] });
+        queryClient.invalidateQueries({ queryKey: ["personal-bests"] });
         return `Subida completada: ${successCount} éxito, ${failCount} error(es)`;
       },
       error: 'Error crítico en la subida',

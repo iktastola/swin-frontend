@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { API_URL as API } from "@/lib/api";
 import { toast } from "sonner";
@@ -18,13 +19,12 @@ import {
 import { UserCog, Eye, EyeOff, Loader2, Trash2 } from "lucide-react";
 
 export default function ManagePayerCard() {
-  const [swimmers, setSwimmers] = useState([]);
+  const queryClient = useQueryClient();
   const [userId, setUserId] = useState("");
-  const [loading, setLoading] = useState(false);
 
   // Estado actual
   const [bank, setBank] = useState(null);          // BankAccountPublic | null
-  const [mandate, setMandate] = useState(null);    // Mandate activo | null
+  const [mandate, setMandate] = useState(null);    // Mandato activo | null
   const [fullIban, setFullIban] = useState(null);  // IBAN revelado
 
   // Formulario IBAN
@@ -37,44 +37,41 @@ export default function ManagePayerCard() {
     new Date().toISOString().slice(0, 10),
   );
 
+  const { data: swimmers = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const { data } = await axios.get(`${API}/users`);
+      return (data || []).filter((u) => u.role === "swimmer");
+    },
+  });
+
+  const { data: payerData, isPending: loading } = useQuery({
+    queryKey: ["sepa/payer", userId],
+    queryFn: async () => {
+      const [bankRes, mandateRes] = await Promise.all([
+        axios.get(`${API}/sepa/bank-accounts/${userId}`).catch(() => null),
+        axios.get(`${API}/sepa/mandates?user_id=${userId}&status=active`),
+      ]);
+      return {
+        bank: bankRes?.data || null,
+        mandate: mandateRes.data?.[0] || null,
+      };
+    },
+    enabled: !!userId,
+  });
+
   useEffect(() => {
-    axios.get(`${API}/users`)
-      .then(({ data }) => setSwimmers(
-        (data || []).filter((u) => u.role === "swimmer")
-      ))
-      .catch(() => toast.error("Error cargando nadadores"));
-  }, []);
-
-  const loadPayer = async (uid) => {
-    setLoading(true);
-    setBank(null); setMandate(null); setFullIban(null);
-    try {
-      // IBAN
-      try {
-        const { data } = await axios.get(
-          `${API}/sepa/bank-accounts/${uid}`
-        );
-        setBank(data);
-        setHolder(data.holder_name || "");
-        setBic(data.bic || "");
-      } catch (e) {
-        if (e.response?.status !== 404) throw e;
+    if (payerData) {
+      setBank(payerData.bank);
+      setMandate(payerData.mandate);
+      if (payerData.bank) {
+        setHolder(payerData.bank.holder_name || "");
+        setBic(payerData.bank.bic || "");
       }
-      setIban("");  // no se precarga (no lo tenemos en claro)
-
-      // Mandato activo
-      const { data: mlist } = await axios.get(
-        `${API}/sepa/mandates?user_id=${uid}&status=active`
-      );
-      setMandate(mlist?.[0] || null);
-    } catch (e) {
-      toast.error(`Error cargando datos: ${e.response?.data?.detail || e.message}`);
-    } finally {
-      setLoading(false);
+      setIban("");
+      setFullIban(null);
     }
-  };
-
-  useEffect(() => { if (userId) loadPayer(userId); }, [userId]);
+  }, [payerData]);
 
   const handleSaveIban = async () => {
     if (!userId || !iban || !holder) {
@@ -90,7 +87,7 @@ export default function ManagePayerCard() {
       });
       toast.success("IBAN guardado");
       setIban("");
-      loadPayer(userId);
+      queryClient.invalidateQueries({ queryKey: ["sepa/payer", userId] });
     } catch (e) {
       toast.error(`Error: ${e.response?.data?.detail || e.message}`);
     }
@@ -130,7 +127,7 @@ export default function ManagePayerCard() {
         type: "RCUR",
       });
       toast.success("Mandato creado");
-      loadPayer(userId);
+      queryClient.invalidateQueries({ queryKey: ["sepa/payer", userId] });
     } catch (e) {
       toast.error(`Error: ${e.response?.data?.detail || e.message}`);
     }
@@ -143,7 +140,7 @@ export default function ManagePayerCard() {
         `${API}/sepa/mandates/${mandate.mandate_id}`,
       );
       toast.success("Mandato cancelado");
-      loadPayer(userId);
+      queryClient.invalidateQueries({ queryKey: ["sepa/payer", userId] });
     } catch (e) {
       toast.error(`Error: ${e.response?.data?.detail || e.message}`);
     }

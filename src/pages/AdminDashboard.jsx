@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,8 +30,24 @@ const DISTANCES = [50, 100, 200, 400, 800, 1500];
 const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
 
 export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
-  const [users, setUsers] = useState([]);
-  const [allTimes, setAllTimes] = useState([]);
+  const queryClient = useQueryClient();
+
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const { data } = await axios.get(`${API}/users`);
+      return data;
+    },
+  });
+
+  const { data: allTimes = [], isPending: loading } = useQuery({
+    queryKey: ["times"],
+    queryFn: async () => {
+      const { data } = await axios.get(`${API}/times`);
+      return data;
+    },
+  });
+
   const [times, setTimes] = useState([]);
 
   // Filter States
@@ -51,12 +68,6 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
   const [showEditTimeDialog, setShowEditTimeDialog] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [editingTime, setEditingTime] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchUsers();
-    fetchAllTimes();
-  }, []);
 
   // Best times per swimmer/distance/style
   const bestTimes = useMemo(() => {
@@ -117,36 +128,13 @@ export default function AdminDashboard({ user, onLogout, onUserUpdate }) {
     setTimes(result);
   }, [allTimes, selectedSwimmer, filterDistance, filterStyle, filterDate, filterLogic, filterMinimaEH, filterMinimaBizkaia, filterMejorTiempo, bestTimes]);
 
-  const fetchUsers = async () => {
-    try {
-const response = await axios.get(`${API}/users`);
-      setUsers(response.data);
-    } catch {
-      toast.error("Error al cargar usuarios");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAllTimes = async () => {
-    try {
-      
-      const response = await axios.get(`${API}/times`);
-      setAllTimes(response.data);
-    } catch {
-      toast.error("Error al cargar tiempos");
-    }
-  };
-
-
-
   const handleAddUser = async (userData) => {
     try {
       
       await axios.post(`${API}/auth/register`, userData);
       toast.success("Usuario creado correctamente");
       setShowAddUserDialog(false);
-      fetchUsers();
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     } catch (error) {
       toast.error(error.response?.data?.detail || "Error al crear usuario");
     }
@@ -164,7 +152,7 @@ const response = await axios.get(`${API}/users`);
       toast.success("Usuario actualizado correctamente");
       setShowEditUserDialog(false);
       setEditingUser(null);
-      fetchUsers();
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     } catch (error) {
       toast.error(error.response?.data?.detail || "Error al actualizar usuario");
     }
@@ -175,7 +163,7 @@ const response = await axios.get(`${API}/users`);
       
       await axios.delete(`${API}/users/${userId}`);
       toast.success("Usuario eliminado");
-      fetchUsers();
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     } catch {
       toast.error("Error al eliminar usuario");
     }
@@ -187,7 +175,7 @@ const response = await axios.get(`${API}/users`);
       await axios.post(`${API}/times`, timeData);
       toast.success("Tiempo registrado correctamente");
       setShowAddTimeDialog(false);
-      fetchAllTimes();
+      queryClient.invalidateQueries({ queryKey: ["times"] });
     } catch (error) {
       toast.error(error.response?.data?.detail || "Error al registrar tiempo");
     }
@@ -205,7 +193,7 @@ const response = await axios.get(`${API}/users`);
       toast.success("Tiempo actualizado correctamente");
       setShowEditTimeDialog(false);
       setEditingTime(null);
-      fetchAllTimes();
+      queryClient.invalidateQueries({ queryKey: ["times"] });
     } catch (error) {
       toast.error(error.response?.data?.detail || "Error al actualizar tiempo");
     }
@@ -216,7 +204,7 @@ const response = await axios.get(`${API}/users`);
       
       await axios.delete(`${API}/times/${timeId}`);
       toast.success("Tiempo eliminado");
-      fetchAllTimes();
+      queryClient.invalidateQueries({ queryKey: ["times"] });
     } catch {
       toast.error("Error al eliminar tiempo");
     }
@@ -244,7 +232,7 @@ const response = await axios.get(`${API}/users`);
     toast.promise(uploadPromise, {
       loading: 'Subiendo tiempos...',
       success: () => {
-        fetchAllTimes();
+        queryClient.invalidateQueries({ queryKey: ["times"] });
         return `Subida completada: ${successCount} éxito, ${failCount} error(es)`;
       },
       error: 'Error crítico en la subida',

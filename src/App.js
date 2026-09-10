@@ -13,33 +13,33 @@ const CoachDashboard = lazy(() => import("@/pages/CoachDashboard"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 
 function App() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    const token = localStorage.getItem('token');
+    const saved = localStorage.getItem('user');
+    return token && saved ? JSON.parse(saved) : null;
+  });
 
   useEffect(() => {
-    // Check if user is logged in. A token en localStorage no garantiza que la
-    // sesión siga válida: validamos contra el backend para que un token
-    // caducado/inválido no deje la app "logueada" pero sin datos.
     const token = localStorage.getItem('token');
+    if (!token) return;
 
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
+    // Validar token en background. Si el token es válido, actualizamos los
+    // datos del usuario (podrían haber cambiado en el servidor). Si no,
+    // limpiamos la sesión. Importante: comprobamos que el token siga en
+    // localStorage antes de actualizar el state para no sobreescribir un
+    // logout que el usuario haya hecho durante la espera.
     axios
       .get(`${API}/users/me`, { timeout: 60000 })
       .then((res) => {
-        setUser(res.data);
-        localStorage.setItem('user', JSON.stringify(res.data));
-        setLoading(false);
+        if (localStorage.getItem('token')) {
+          setUser(res.data);
+          localStorage.setItem('user', JSON.stringify(res.data));
+        }
       })
       .catch(() => {
-        // Token inválido o servidor no accesible: limpiar y volver al login.
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
-        setLoading(false);
       });
   }, []);
 
@@ -86,14 +86,6 @@ function App() {
     localStorage.removeItem('user');
     setUser(null);
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50">
-        <div className="animate-pulse text-[#278D33] text-xl font-semibold">Cargando...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="App">
