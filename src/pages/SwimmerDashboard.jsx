@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User as UserIcon } from "lucide-react";
 import EditProfileDialog from "@/components/EditProfileDialog";
+import MinimasTables from "@/components/MinimasTables";
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
 const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
@@ -222,7 +223,10 @@ export default function SwimmerDashboard({ user, onLogout, onUserUpdate }) {
             <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
               <CardHeader>
                 <div className="flex flex-col gap-6">
-                  <CardTitle className="text-2xl text-gray-900">Mis Tiempos de Natación</CardTitle>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <CardTitle className="text-2xl text-gray-900">Mis Tiempos de Natación</CardTitle>
+                    <MinimasTables swimmerId={user.id} />
+                  </div>
 
                   {/* Filters Section */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 bg-gray-50/50 p-4 rounded-lg border border-gray-100">

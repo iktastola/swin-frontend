@@ -17,6 +17,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User as UserIcon } from "lucide-react";
 import EditProfileDialog from "@/components/EditProfileDialog";
 import AuditTool from "@/components/AuditTool";
+import MinimasTables from "@/components/MinimasTables";
 
 
 const DISTANCES = [50, 100, 200, 400, 800, 1500];
@@ -250,14 +251,17 @@ export default function CoachDashboard({ user, onLogout, onUserUpdate }) {
 
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <CardTitle className="text-2xl text-gray-900">Tiempos de Natación</CardTitle>
-                <Button
-                  onClick={() => setShowAddDialog(true)}
-                  className="bg-[#278D33] hover:bg-[#1f6b28] text-white"
-                  data-testid="add-time-button"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Registrar Tiempo
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <MinimasTables swimmerId={selectedSwimmer} />
+                  <Button
+                    onClick={() => setShowAddDialog(true)}
+                    className="bg-[#278D33] hover:bg-[#1f6b28] text-white"
+                    data-testid="add-time-button"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Registrar Tiempo
+                  </Button>
+                </div>
               </div>
 
               {/* Filters Section */}

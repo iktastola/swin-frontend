@@ -247,3 +247,75 @@ button {
   background: #1f6b28;
 }
 
+
+/* Tabla de mínimas: solo visible al imprimir */
+#minimas-print-area {
+  display: none;
+}
+
+#minimas-print-area h1 {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.minimas-print-subtitle {
+  font-size: 11px;
+  color: #374151;
+  margin-bottom: 2px;
+}
+
+.minimas-print-footer {
+  margin-top: 8px;
+  font-size: 9px;
+  color: #6b7280;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #minimas-print-area,
+  #minimas-print-area * {
+    visibility: visible;
+  }
+
+  #minimas-print-area {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    background: #ffffff;
+    color: #111827;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  #minimas-print-area th,
+  #minimas-print-area td {
+    position: static !important;
+  }
+
+  #minimas-print-area .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  #minimas-print-area table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+
+  #minimas-print-area th,
+  #minimas-print-area td {
+    border: 1px solid #d1d5db;
+    padding: 4px 6px;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+}
