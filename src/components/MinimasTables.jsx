@@ -16,33 +16,76 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 const COLLECTIONS = {
-  BizkaiaMinimas: { label: "Mínimas Bizkaia", short: "Bizkaia" },
-  EHMinimas: { label: "Mínimas Euskal Herria", short: "Euskal Herria" },
+  BizkaiaMinimas: { label: "Mínimas Bizkaia" },
+  EHMinimas: { label: "Mínimas Euskal Herria" },
 };
 
 const STYLES = ["Libre", "Espalda", "Braza", "Mariposa", "Estilos"];
 
-const CATEGORIES = [
-  { key: "alevin_1", label: "Alevín 1" },
-  { key: "alevin_2", label: "Alevín 2" },
-  { key: "infantil_1", label: "Infantil 1" },
-  { key: "infantil_2", label: "Infantil 2" },
-  { key: "junior_1", label: "Junior 1" },
-  { key: "junior_2", label: "Junior 2" },
-  { key: "junior_3", label: "Junior 3" },
-  { key: "abs_jov", label: "Abs. Joven" },
-  { key: "abs_1", label: "Abs. 1" },
+const CATEGORY_ORDER = [
+  "alevin_1",
+  "alevin_2",
+  "infantil_1",
+  "infantil_2",
+  "junior_1",
+  "junior_2",
+  "junior_3",
+  "abs_jov_1",
+  "abs_jov_2",
+  "abs_jov",
+  "abs_1",
+  "abs",
+  "record",
 ];
+
+const CATEGORY_LABELS = {
+  alevin_1: "Alevín 1",
+  alevin_2: "Alevín 2",
+  infantil_1: "Infantil 1",
+  infantil_2: "Infantil 2",
+  junior_1: "Junior 1",
+  junior_2: "Junior 2",
+  junior_3: "Junior 3",
+  abs_jov_1: "Abs. Joven 1",
+  abs_jov_2: "Abs. Joven 2",
+  abs_jov: "Abs. Joven",
+  abs_1: "Abs. 1",
+  abs: "Absoluto",
+  record: "Récord",
+};
 
 const GENDERS = {
   fem: "Femenino",
-  masc: "Masculino",
+  mas: "Masculino",
 };
 
+function categorySuffix(categoryKey) {
+  return categoryKey?.replace(/^(fem|mas)_/, "") || null;
+}
+
 function categoryLabel(categoryKey) {
-  if (!categoryKey) return null;
-  const category = CATEGORIES.find((item) => categoryKey.endsWith(`_${item.key}`));
-  return category?.label || null;
+  const suffix = categorySuffix(categoryKey);
+  if (!suffix) return null;
+  return CATEGORY_LABELS[suffix] || suffix;
+}
+
+function categoryRank(categoryKey) {
+  const suffix = categorySuffix(categoryKey);
+  const rank = CATEGORY_ORDER.indexOf(suffix);
+  return rank === -1 ? CATEGORY_ORDER.length : rank;
+}
+
+function parseFormattedTime(value) {
+  const match = String(value).trim().match(/^(\d+):(\d{1,2})[.,](\d{1,3})$/);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]) + Number(`0.${match[3]}`);
+}
+
+function toSeconds(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const numeric = Number(value);
+  if (Number.isFinite(numeric)) return numeric;
+  return parseFormattedTime(value);
 }
 
 function flattenTimes(doc) {
@@ -53,25 +96,59 @@ function flattenTimes(doc) {
 
   entries.forEach((entry) => {
     if (!entry || typeof entry !== "object") return;
+
+    const entrySeconds = toSeconds(entry.time_seconds);
+
     Object.entries(entry).forEach(([category, value]) => {
+      if (category === "time_seconds") return;
+
+      let seconds = null;
+
       if (value && typeof value === "object" && value.time_seconds !== undefined) {
-        result[category] = value.time_seconds;
-      } else if (typeof value === "number") {
-        result[category] = value;
+        seconds = toSeconds(value.time_seconds);
+      } else if (value !== null && value !== undefined) {
+        seconds = toSeconds(value);
       }
+
+      if (seconds === null) seconds = entrySeconds;
+      if (seconds !== null) result[category] = seconds;
     });
   });
 
   return result;
 }
 
-function distanceNumber(doc) {
-  const value = Number(doc?.distancia);
-  return Number.isFinite(value) ? value : 0;
+function distanceLabel(doc) {
+  const raw = doc?.distancia;
+  if (raw === null || raw === undefined || raw === "") return "—";
+  const numeric = Number(raw);
+  return Number.isFinite(numeric) ? `${numeric} m` : String(raw);
+}
+
+function distanceSortKey(doc) {
+  const raw = String(doc?.distancia ?? "");
+  const relay = raw.match(/^(\d+)\s*[xX]\s*(\d+)$/);
+  if (relay) return 100000 + Number(relay[1]) * Number(relay[2]);
+
+  const numeric = Number(raw);
+  return Number.isFinite(numeric) ? numeric : 99999;
 }
 
 function MinimasTable({ rows, gender, highlightKey }) {
-  if (!rows.length) {
+  const tableRows = rows.map((row) => ({ row, times: flattenTimes(row) }));
+  const categoryKeys = [];
+
+  tableRows.forEach(({ times }) => {
+    Object.keys(times).forEach((key) => {
+      if (key.startsWith(`${gender}_`) && !categoryKeys.includes(key)) {
+        categoryKeys.push(key);
+      }
+    });
+  });
+
+  categoryKeys.sort((a, b) => categoryRank(a) - categoryRank(b));
+
+  if (!rows.length || !categoryKeys.length) {
     return (
       <div className="py-10 text-center text-sm text-gray-500">
         No hay mínimas disponibles con los filtros seleccionados.
@@ -85,49 +162,44 @@ function MinimasTable({ rows, gender, highlightKey }) {
         <TableHeader>
           <TableRow>
             <TableHead className="sticky left-0 z-10 bg-white">Distancia</TableHead>
-            {CATEGORIES.map((category) => {
-              const key = `${gender}_${category.key}`;
+            {categoryKeys.map((key) => {
               const highlighted = key === highlightKey;
               return (
                 <TableHead
-                  key={category.key}
+                  key={key}
                   className={cn(
                     "whitespace-nowrap text-center",
                     highlighted && "bg-emerald-50 font-bold text-[#278D33]"
                   )}
                 >
-                  {category.label}
+                  {categoryLabel(key)}
                 </TableHead>
               );
             })}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row) => {
-            const times = flattenTimes(row);
-            return (
-              <TableRow key={`${row.prueba}-${row.distancia}`}>
-                <TableCell className="sticky left-0 z-10 bg-white font-semibold">
-                  {distanceNumber(row)} m
-                </TableCell>
-                {CATEGORIES.map((category) => {
-                  const key = `${gender}_${category.key}`;
-                  const highlighted = key === highlightKey;
-                  return (
-                    <TableCell
-                      key={category.key}
-                      className={cn(
-                        "whitespace-nowrap text-center tabular-nums",
-                        highlighted && "bg-emerald-50 font-semibold text-[#278D33]"
-                      )}
-                    >
-                      {formatSeconds(times[key])}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            );
-          })}
+          {tableRows.map(({ row, times }, index) => (
+            <TableRow key={`${row.prueba}-${row.distancia}-${index}`}>
+              <TableCell className="sticky left-0 z-10 bg-white font-semibold">
+                {distanceLabel(row)}
+              </TableCell>
+              {categoryKeys.map((key) => {
+                const highlighted = key === highlightKey;
+                return (
+                  <TableCell
+                    key={key}
+                    className={cn(
+                      "whitespace-nowrap text-center tabular-nums",
+                      highlighted && "bg-emerald-50 font-semibold text-[#278D33]"
+                    )}
+                  >
+                    {formatSeconds(times[key])}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </div>
@@ -140,13 +212,10 @@ export default function MinimasTables({ swimmerId }) {
   const [style, setStyle] = useState("Libre");
   const [pool, setPool] = useState("25");
 
-  const isBizkaia = collection === "BizkaiaMinimas";
-
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ["minimas", collection, isBizkaia ? pool : null, swimmerId || null],
+    queryKey: ["minimas", collection, pool, swimmerId || null],
     queryFn: async () => {
-      const params = {};
-      if (isBizkaia) params.piscina_metros = Number(pool);
+      const params = { piscina_metros: Number(pool) };
       if (swimmerId) params.swimmer_id = swimmerId;
       const response = await axios.get(`${API}/minimas/${collection}`, { params });
       return response.data;
@@ -157,30 +226,27 @@ export default function MinimasTables({ swimmerId }) {
 
   const documentos = useMemo(() => {
     const docs = data?.documentos || [];
-    if (collection !== "EHMinimas") return docs;
-
     const byTest = new Map();
+
     docs.forEach((doc) => {
-      const key = `${doc.prueba}|${doc.distancia}`;
-      const existing = byTest.get(key);
-      if (!existing || (Number(doc.piscina_metros) === 25 && Number(existing.piscina_metros) !== 25)) {
-        byTest.set(key, doc);
-      }
+      const key = `${doc.prueba}|${doc.distancia}|${doc.piscina_metros ?? ""}`;
+      if (!byTest.has(key)) byTest.set(key, doc);
     });
+
     return Array.from(byTest.values());
-  }, [data, collection]);
+  }, [data]);
 
   const rows = useMemo(
     () =>
       documentos
         .filter((doc) => doc.prueba === style)
-        .sort((a, b) => distanceNumber(a) - distanceNumber(b)),
+        .sort((a, b) => distanceSortKey(a) - distanceSortKey(b)),
     [documentos, style]
   );
 
   const highlightKey = data?.categoria || null;
-  const highlightedGender = highlightKey?.startsWith("masc_")
-    ? "masc"
+  const highlightedGender = highlightKey?.startsWith("mas_")
+    ? "mas"
     : highlightKey?.startsWith("fem_")
       ? "fem"
       : null;
@@ -289,17 +355,15 @@ export default function MinimasTables({ swimmerId }) {
                 </SelectContent>
               </Select>
 
-              {isBizkaia && (
-                <Select value={pool} onValueChange={setPool}>
-                  <SelectTrigger className="w-[130px] bg-white">
-                    <SelectValue placeholder="Piscina" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="25">25 m</SelectItem>
-                    <SelectItem value="50">50 m</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
+              <Select value={pool} onValueChange={setPool}>
+                <SelectTrigger className="w-[130px] bg-white">
+                  <SelectValue placeholder="Piscina" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="25">25 m</SelectItem>
+                  <SelectItem value="50">50 m</SelectItem>
+                </SelectContent>
+              </Select>
 
               <Button
                 type="button"
@@ -335,8 +399,7 @@ export default function MinimasTables({ swimmerId }) {
         <div id="minimas-print-area">
           <h1>{collectionInfo?.label}</h1>
           <p className="minimas-print-subtitle">
-            {GENDERS[gender]} · {style}
-            {isBizkaia ? ` · Piscina ${pool} m` : ""}
+            {GENDERS[gender]} · {style} · Piscina {pool} m
           </p>
           {categoryName && (
             <p className="minimas-print-subtitle">
